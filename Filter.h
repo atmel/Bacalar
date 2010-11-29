@@ -1,0 +1,63 @@
+
+//#include <CUDAEnviroment header>
+#include "structures.h"
+
+/*
+
+Abstract Filter Class
+
+contains all fiter functions, supporting functions and
+necessary static variables.
+It is used as function container - functions are called
+from lists via pointers.
+
+*/ 
+
+union _nanny{
+	imDataPtr srcB;
+	int k;
+	struct _kj{
+		int k,j;
+	} kj;
+}fourthParam;
+
+
+template <class ImType>
+class Filter{
+
+	static int imageDim;						//2D, 3D
+	static int imageDimensions[3];				//in pixels
+	static int frameSize;						//width in pixels
+	//static float CPU[XY];						//array with function pointers for easy access
+	//static float GPU[XY];
+
+//supporting functions (CPU):
+	inline ImType Min(ImType x, ImType y)
+		{return x>y?y:x}
+	inline ImType Max(ImType x, ImType y)
+		{return x<y?y:x}
+
+public:
+
+//CPU
+	//basic operations
+	static float Add (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A+B
+	static float Sub (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A-B
+	//morphology
+	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//er(A)
+	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//dil(A)
+	static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//op(A)
+	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//A-B
+	static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A-
+	//sorted list filters - use mask
+	static float Median (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float Wmedian (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float KthValue (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float KthSubJth (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float BES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float WBES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+
+
+
+
+}
