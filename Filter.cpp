@@ -1,6 +1,6 @@
 //#include <CUDAfunctions definition>
 
-#include "filter.h"
+#include "Filter.h"
 
-float Filter::CPU = 
-{};
+//float Filter::CPU = 
+//{};

@@ -1,6 +1,7 @@
+#pragma once
 
 //#include <CUDAEnviroment header>
-#include "structures.h"
+#include <Bacalar/structures.h>
 
 /*
 
@@ -13,16 +14,17 @@ from lists via pointers.
 
 */ 
 
-union _nanny{
-	imDataPtr srcB;
+template <typename imDataType>
+union fourthParam{
+	imDataType srcB;
 	int k;
 	struct _kj{
 		int k,j;
 	} kj;
-}fourthParam;
+};
 
 
-template <class ImType>
+template <typename imDataType>
 class Filter{
 
 	static int imageDim;						//2D, 3D
@@ -32,9 +34,9 @@ class Filter{
 	//static float GPU[XY];
 
 //supporting functions (CPU):
-	inline ImType Min(ImType x, ImType y)
+	inline imDataType Min(imDataType x, imDataType y)
 		{return x>y?y:x}
-	inline ImType Max(ImType x, ImType y)
+	inline imDataType Max(imDataType x, imDataType y)
 		{return x<y?y:x}
 
 public:
@@ -57,7 +59,4 @@ public:
 	static float BES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
 	static float WBES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
 
-
-
-
-}
+};

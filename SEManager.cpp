@@ -1,12 +1,11 @@
 #include "SEManager.h"
 
-
-
-bool SEManager::Create(int framesize)
+template<typename imDataType>
+bool SEManager<imDataType>::Create(int framesize)
 {
 
 	int dSize = framesize*framesize*framesize;
 
-	dictionary = new int[3][dsize];
+	dictionary = new int[dsize][3];
 
 }

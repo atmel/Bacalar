@@ -1,3 +1,8 @@
+#pragma once
+
+#include <string>
+#include <vector>
+using namespace std;
 
 /*
 mask is ignored in morphological filters, so they stay fast despite mask uses floats
@@ -7,19 +12,21 @@ it as follows:
 	*(image + x + wihth*(y + z*height) + nb[xy]) = ...
 
 */
+
+
 typedef struct{
 	string name;
 	int *nb;
 	int nbsize;
 	float *mask;
-} structEl
+} structEl;
 
-template <imDataType>
+template <typename imDataType>
 class SEManager{
 
-	int[3] *dictionary;
+	int **dictionary;					//3 * SE size
 
-	vector<sE> se;
+	vector<structEl> se;
 
 public:
 

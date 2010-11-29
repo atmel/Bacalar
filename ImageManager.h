@@ -1,3 +1,5 @@
+#pragma once
+
 /*
 
 
@@ -18,12 +20,12 @@ public:
 	int GetDim();
 	bool GetDimensions(int dims[3]);
 	int GetFrameSize();
-}
+};
 
 
 
 
-template <class imDataType>
+template <typename imDataType>
 class ImageManager : private ImageInfo
 {
 imDataType *image;
@@ -33,4 +35,4 @@ public:
 	bool SaveBmp(const char* fname);
 
 
-}
+};
