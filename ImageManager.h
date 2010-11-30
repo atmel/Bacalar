@@ -6,6 +6,10 @@
 
 
 */
+
+#include <fstream>
+using namespace std;
+
 class ImageInfo{
 
 	static int imageDim;
@@ -18,7 +22,7 @@ public:
 	bool SetFrameSize(int s);
 
 	int GetDim();
-	bool GetDimensions(int dims[3]);
+	bool GetDimensions(int index, int dim);
 	int GetFrameSize();
 };
 
@@ -28,11 +32,12 @@ public:
 template <typename imDataType>
 class ImageManager : private ImageInfo
 {
-imDataType *image;
+imDataType **image;						//array of images
 
 public:
+	bool Load3D(const char* fname);
 	bool LoadBMP(const char* fname);
-	bool SaveBmp(const char* fname);
+	bool SaveBmp(const char* fname, int slicingDir=-1, int sliPerLine=-1); //defaults: saving 2D image
 
 
 };

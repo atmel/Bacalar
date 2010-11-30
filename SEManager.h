@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 using namespace std;
+#include "ImageManager.h"
 
 /*
 mask is ignored in morphological filters, so they stay fast despite mask uses floats
@@ -14,7 +15,7 @@ it as follows:
 */
 
 
-typedef struct{
+typedef struct _structEl{
 	string name;
 	int *nb;
 	int nbsize;
@@ -22,17 +23,19 @@ typedef struct{
 } structEl;
 
 template <typename imDataType>
-class SEManager{
+class SEManager : private ImageInfo{
 
+	static bool singletonFlag;
 	int **dictionary;					//3 * SE size
-
+	int dictSize;
 	vector<structEl> se;
+	SEManager();
 
 public:
 
-	static bool Create(int framesize);
+	static SEManager<imDataType>* Create();
 	structEl *GetSE(int index);
-	int Parse2SE(string istr);			//3 lines are pre-parsed to single line
+	int Parse2SE(float *mask);			//float [dictsize]
 
 
 
