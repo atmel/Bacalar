@@ -6,11 +6,31 @@ using namespace std;
 #include "ImageManager.h"
 
 /*
-mask is ignored in morphological filters, so they stay fast despite mask uses floats
-nb[] contains only pre-computed pointer differences from cental pixel. Therefore use 
-it as follows:
-	*image;
-	*(image + x + wihth*(y + z*height) + nb[xy]) = ...
+	StructEl holds necessary information about used structure element
+	- structEl.mask contains weights of nb pixels and is ignored in morphological 
+		filters, so they stay fast despite StructEl.mask beeing float
+	- nb[] contains only pre-computed pointer differences from cental pixel. Therefore 
+		use it as follows:
+			a = *(image + x + wihth*(y + z*height) + nb[i])
+		where [x,y,z] is processed (central) pixel, 'i' is in range [0-nbSize] and 'image'
+		is pointer to the image
+	- mask orientation towards image (2D uses only one layer)
+
+	....................................................................
+	.0,0,0..+----+......................................................
+	......\/|.../|..<--- 3D image, mask is in the same orientation......
+	....../\|../.|......................................................
+	...../..+-/--+....+----+.<-- Top of the top (first in file) layer...
+	..../.././../..../..../|............................................
+	...+----+../..../..../.|............................................
+	...|./..|./....+----+..+.<-- Bottom layer (rightmost in config file)
+	...|/...|/.....|....|./.............................................
+	...+----+......|....|/..............................................
+	...............+----+...............................................
+	....................................................................
+
+	- dictionary contains pointer differences for whole mask in the order, as
+		the mask is parsed by Parse2SE
 
 */
 
@@ -18,15 +38,17 @@ it as follows:
 typedef struct _structEl{
 	string name;
 	int *nb;
-	int nbsize;
+	int nbSize;
 	float *mask;
 } structEl;
+
+
 
 template <typename imDataType>
 class SEManager : private ImageInfo{
 
 	static bool singletonFlag;
-	int **dictionary;					//3 * SE size
+	int *dictionary;					//contains all pointer differences
 	int dictSize;
 	vector<structEl> se;
 	SEManager();
@@ -34,9 +56,13 @@ class SEManager : private ImageInfo{
 public:
 
 	static SEManager<imDataType>* Create();
+	int GetSEIndex(string *name);
 	structEl *GetSE(int index);
-	int Parse2SE(float *mask);			//float [dictsize]
+	bool DeleteAll();							//SE refresh - SEs still have to be parsed, so merging is worthless 
+	int Parse2SE(string *name, float *mask);	//float mask[dictsize]
 
 
 
 };
+
+#include "Bacalar/SEManagerCode.h"

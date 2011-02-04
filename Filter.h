@@ -5,12 +5,12 @@
 
 /*
 
-Abstract Filter Class
+	Abstract Filter Class
 
-contains all fiter functions, supporting functions and
-necessary static variables.
-It is used as function container - functions are called
-from lists via pointers.
+	contains all fiter functions, supporting functions and
+	necessary static variables.
+	It is used as function container - functions are called
+	from lists via pointers.
 
 */ 
 
@@ -18,9 +18,9 @@ template <typename imDataType>
 union fourthParam{
 	imDataType srcB;
 	int k;
-	struct _kj{
+	struct _int2{
 		int k,j;
-	} kj;
+	} int2;
 };
 
 
@@ -49,7 +49,7 @@ public:
 	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//er(A)
 	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//dil(A)
 	static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//op(A)
-	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//A-B
+	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//
 	static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A-
 	//sorted list filters - use mask
 	static float Median (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
