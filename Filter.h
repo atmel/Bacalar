@@ -14,6 +14,9 @@
 
 */ 
 
+#include "Bacalar/SEManager.h"
+#include "Bacalar/ImageManager.h"
+
 template <typename imDataType>
 union fourthParam{
 	imDataType srcB;
@@ -25,15 +28,17 @@ union fourthParam{
 
 
 template <typename imDataType>
-class Filter{
+class Filter : private ImageInfo{
 
-	static int imageDim;						//2D, 3D
-	static int imageDimensions[3];				//in pixels
-	static int frameSize;						//width in pixels
+	static unsigned imageDim;						//2D, 3D
+	static unsigned imageDimensions[3];				//in pixels
+	static unsigned frameSize, lineSize, sliceSize;	//width in pixels
+	static unsigned long size;						//total size of image (including frame) in pixels
+	static SEManager<imDataType> *sem;
 	//static float CPU[XY];						//array with function pointers for easy access
 	//static float GPU[XY];
 
-//supporting functions (CPU):
+	//supporting functions (CPU):
 	inline imDataType Min(imDataType x, imDataType y)
 		{return x>y?y:x}
 	inline imDataType Max(imDataType x, imDataType y)
@@ -41,22 +46,26 @@ class Filter{
 
 public:
 
-//CPU
+	static bool Init(SEManager<imDataType> *_sem);							//initialize static variables
+
+	//CPU
 	//basic operations
-	static float Add (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A+B
-	static float Sub (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A-B
+	static float Add (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//A+B
+	static float ASubB (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//A-B
 	//morphology
-	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//er(A)
-	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//dil(A)
-	static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//op(A)
-	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);	//
-	static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);		//A-
+	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//er(A)
+	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//dil(A)
+	static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//op(A)
+	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//
+	static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//A-
 	//sorted list filters - use mask
-	static float Median (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
-	static float Wmedian (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
-	static float KthValue (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
-	static float KthSubJth (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
-	static float BES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
-	static float WBES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam p4);
+	static float Median (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	static float WMedian (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	static float KthQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	static float KSubJQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	static float BES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	static float WBES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
 
 };
+
+#include "Bacalar/FilterCode.h"

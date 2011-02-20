@@ -60,9 +60,9 @@ SEManager<imDataType>::SEManager(){
 /* 
 	example 3x3x3 SE
 
-	a b c | j k l | s t u
-	d e f | m n o | v w x
-	g h i | p q r | y z 1
+	a, b, c,  j, k, l,  s, t, u,
+	d, e, f,  m, n, o,  v, w, x,
+	g, h, i,  p, q, r,  y, z, 1,
 
 	are pre-parsed line-by-line to an array of floats:
 
@@ -79,11 +79,11 @@ SEManager<imDataType>::SEManager(){
 template<typename imDataType>
 int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 	
-	structEl dummy;
+	//structEl dummy;
 	int justAdded;
 	int nonZero = 0;
 
-	se.push_back(dummy);
+	se.push_back(new structEl);
 	justAdded = se.size() - 1;
 	
 	//check number of non-zero elements in mask (parsed to line of floats)
@@ -91,18 +91,26 @@ int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 		if(mask[i] != 0.0) nonZero++;
 	}
 
-	se[justAdded].nbSize = nonZero;
-	se[justAdded].mask = new float[nonZero];
-	se[justAdded].nb = new int[nonZero];
-	se[justAdded].name = *name;
+	se[justAdded]->nbSize = nonZero;
+	se[justAdded]->mask = new float[nonZero];
+	se[justAdded]->nb = new unsigned[nonZero];
+	se[justAdded]->name = *name;
 
 	//fill SE mask - only used pixels
 	nonZero = 0;		//as count variable
 	for(int i=0; i < dictSize;i++){		
 		if(mask[i] != 0.0){
-			se[justAdded].mask[nonZero] = mask[i];
-			se[justAdded].nb[nonZero] = dictionary[i];
+			se[justAdded]->mask[nonZero] = mask[i];
+			se[justAdded]->nb[nonZero] = dictionary[i];
 			nonZero++;
 		}
 	}
+	return se[justAdded]->nbSize;
+}
+
+
+
+template<typename imDataType>
+structEl* SEManager<imDataType>::GetSE(int index){
+	return se[index];
 }

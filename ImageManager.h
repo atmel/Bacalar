@@ -33,7 +33,7 @@
 #include <map>
 using namespace std;
 
-class ImageInfo{
+class ImageInfo{							//abstract class
 
 	static int imageDim;
 	static int imageDimensions[3];
@@ -44,9 +44,9 @@ public:
 	bool SetDimensions(int idx ,int dim);	//indexes 0,1,2
 	bool SetFrameSize(int s);
 
-	int GetDim();							//gets image dimensionality
-	int GetDimensions(int index);			//indexes 0,1,2
-	int GetFrameSize();
+	static int GetDim();							//gets image dimensionality
+	static int GetDimensions(int index);			//indexes 0,1,2
+	static int GetFrameSize();
 };
 
 
@@ -56,7 +56,7 @@ template <typename imDataType>
 class ImageManager : private ImageInfo
 {
 	static bool singletonFlag;
-	vector<imDataType*> image;						//array of images
+public:vector<imDataType*> image;						//array of images
 	
 	ImageManager();
 
@@ -72,3 +72,4 @@ public:
 };
 
 #include "Bacalar/ImageManagerCode.h"
+#include "Bacalar/ImageInfo.h"
