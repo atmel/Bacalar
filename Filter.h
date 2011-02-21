@@ -9,17 +9,18 @@
 
 	contains all fiter functions, supporting functions and
 	necessary static variables.
-	It is used as function container - functions are called
+	It is used as abstract function container - functions are called
 	from lists via pointers.
 
 */ 
 
 #include "Bacalar/SEManager.h"
 #include "Bacalar/ImageManager.h"
+#include "Bacalar/structures.h"		//for basic definitions
 
 template <typename imDataType>
 union fourthParam{
-	imDataType srcB;
+	imDataType *srcB;
 	int k;
 	struct _int2{
 		int k,j;
@@ -68,4 +69,21 @@ public:
 
 };
 
-#include "Bacalar/FilterCode.h"
+/*
+
+	Useful macros ---------------------------------
+
+*/
+
+#define FOR3D(SLOWEST,MID,FASTEST)\
+for(SLOWEST=frameSize;SLOWEST<imageDimensions[2]+frameSize;SLOWEST++)\
+for(MID=frameSize;MID<imageDimensions[1]+frameSize;MID++)\
+for(FASTEST=frameSize;FASTEST<imageDimensions[0]+frameSize;FASTEST++)
+
+
+
+
+#include "Bacalar/filter/InitandAlgebra.h"
+#include "Bacalar/filter/Morphology.h"
+#include "Bacalar/filter/SortedList.h"
+#include "Bacalar/filter/Walschlist.h"
