@@ -45,6 +45,8 @@ class Filter : private ImageInfo{
 	inline imDataType Max(imDataType x, imDataType y)
 		{return x<y?y:x}
 
+public:static bool QsortOpt(imDataType *base, unsigned initBaseLenght = 0); 
+
 public:
 
 	static bool Init(SEManager<imDataType> *_sem);							//initialize static variables
@@ -53,6 +55,7 @@ public:
 	//basic operations
 	static float Add (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//A+B
 	static float ASubB (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//A-B
+	static float AddNoise (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//A-B
 	//morphology
 	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//er(A)
 	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//dil(A)
@@ -87,3 +90,4 @@ for(FASTEST=frameSize;FASTEST<imageDimensions[0]+frameSize;FASTEST++)
 #include "Bacalar/filter/Morphology.h"
 #include "Bacalar/filter/SortedList.h"
 #include "Bacalar/filter/Walschlist.h"
+#include "Bacalar/filter/fastsort.h"
