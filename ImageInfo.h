@@ -14,17 +14,17 @@ int ImageInfo::imageDimensions[3] = {0,0,0};
 int ImageInfo::frameSize = 0;
 
 bool ImageInfo::SetDim(int d){
-	if((imageDim != 0)&&(imageDim != d)) return false;
+	if(((imageDim != 0)&&(imageDim != d))||(d < 0)) return false;
 	imageDim = d;
 	return true;
 }
 bool ImageInfo::SetDimensions(int idx ,int dim){
-	if((imageDimensions[idx] != 0)&&(imageDimensions[idx] != dim)) return false;
+	if(((imageDimensions[idx] != 0)&&(imageDimensions[idx] != dim))||(dim < 0)) return false;
 	imageDimensions[idx] = dim;
 	return true;
 }
 bool ImageInfo::SetFrameSize(int s){
-	if((frameSize != 0)&&(frameSize != s)) return false;
+	if(((frameSize != 0)&&(frameSize != s))||(s < 0)) return false;
 	frameSize = s;
 	return true;
 }

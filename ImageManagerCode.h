@@ -30,7 +30,7 @@ TODO: CUDA
 */
 #include <iostream>
 template <typename imDataType>
-bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//without .hdr or .img extension
+int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//without .hdr or .img extension
 
 	ifstream inFile;
 	unsigned char rawIn[348];
@@ -39,13 +39,14 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 
 	cout << "Start\n";
 	//set image dimension
-	if(!SetDim(3)) return false;	//second image has different dimension
+	if(!SetDim(3)) return BAD_SUBIMAGE_DIMENSION;	//second image has different dimension
 	
 	//read header file
 	string name(fname);
 	name.append(".hdr");
 
 	inFile.open(name.c_str());
+	if(!inFile.is_open()) return NO_SUCH_FILE;
 	inFile.read((char*)rawIn,348);
 	inFile.close();
 
@@ -60,11 +61,11 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 
 	if(endian == 0){
 		//wrong/unknown file format
-		return 0;
+		return UNKNOWN_FILE_FORMAT;
 		//big endian
 	}else if(endian == 2){			
 		if(/*((int)rawIn[32] + 256*rawIn[33] != 16384) ||*/ (rawIn[38] != 'r'))
-			return 0;
+			return UNKNOWN_FILE_FORMAT;
 		success &= SetDimensions(0,(int)rawIn[42] + 256*rawIn[43]);
 		success &= SetDimensions(1,(int)rawIn[44] + 256*rawIn[45]);
 		success &= SetDimensions(2,(int)rawIn[46] + 256*rawIn[47]);
@@ -74,8 +75,7 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 		//little endian
 	}else if(endian == 1){
 		if(/*((int)rawIn[35] + 256*rawIn[34] != 16384) ||*/ (rawIn[38] != 'r'))
-			return 0;
-
+			return UNKNOWN_FILE_FORMAT;
 		success &= SetDimensions(0,(int)rawIn[43] + 256*rawIn[42]);
 		success &= SetDimensions(1,(int)rawIn[45] + 256*rawIn[44]);
 		success &= SetDimensions(2,(int)rawIn[47] + 256*rawIn[46]);
@@ -84,18 +84,20 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 	}
 	cout << "Dimensions: " << GetDimensions(0) << ' ' << GetDimensions(1) << ' ' << GetDimensions(2) << '\n';
 
-	if(!success) return 0;					//second image has different dimension(s)
+	if(!success) return BAD_SUBIMAGE_DIMENSIONS;					//second image has different dimension(s)
 
-	if(bitPix != 8) return 0;				//8-bit unsigned char only
+	if(bitPix != 8) return BAD_IMAGE_FORMAT;				//8-bit unsigned char only
 
 	//read the img file CPU
 
-	if(!SetFrameSize(frameSize)) return 0;
+	if(frameSize != -1){
+		if(!SetFrameSize(frameSize)) return BAD_FRAMESIZE;
+	}
 
 	int curIm = image.size();
-	int frame = frameSize;
-	int dims[3] = {GetDimensions(0)+2*frame,
-		GetDimensions(1)+2*frame,GetDimensions(2)+2*frame};  //image dimensions incl. frame
+	int frame = (frameSize==-1)?GetFrameSize():frameSize;		//first load/subsequent load
+	int dims[3] = {GetDimensions(0)+2*frame,	
+		GetDimensions(1)+2*frame,GetDimensions(2)+2*frame};		//image dimensions incl. frame
 
 	//name.clear();
 	fstream inFile2;
@@ -105,7 +107,7 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 	inFile2.open(name.c_str(),ios::in|ios::binary);
 	unsigned char *raw; 
 
-	if(!inFile2.is_open()) return 0;
+	if(!inFile2.is_open()) return NO_SUCH_FILE;
 
 	cout << "File "<< name << " opened\n";
 	image.push_back(NULL);					//initialize vector item
@@ -113,6 +115,7 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 
 	raw = new unsigned char[GetDimensions(0)*GetDimensions(1)*GetDimensions(2)];
 	inFile2.read((char*)raw,GetDimensions(0)*GetDimensions(1)*GetDimensions(2));
+	inFile.close();
 
 	unsigned int l=0;
 
@@ -132,7 +135,6 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 				l++;
 			}
 	image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255;
-	inFile.close();
 
 	cout << "Data read\n";
 	return true;
@@ -140,7 +142,7 @@ bool ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wi
 
 
 template <typename imDataType>
-bool ImageManager<imDataType>::LoadBMP(const char* fname){
+int ImageManager<imDataType>::LoadBMP(const char* fname, int frameSize){
 
 }
 
@@ -150,11 +152,12 @@ bool ImageManager<imDataType>::LoadBMP(const char* fname){
 
 	Slicing direction is index of dimension, which will transform to the number of slices.
 	I.e. 20x30x40 image saved with slicingDir 1 will consist of 30 20x40 planar images.
+
+	//dim[0] is fastest running
 */
 template <typename imDataType>
-bool ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir, int sliPerLine){
-	//ted budu predstirat, ze dim[0] je nejrychleji bezici index v obrazku a dim[2] nejpomalejsi a ze ukladam 3D
-
+int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir, int sliPerLine){
+	
 	if(GetDim() != 3) return false;
 
 	unsigned int bitmapSize[2];			//width, height
@@ -235,9 +238,9 @@ bool ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDi
 	offset = fileSize;
 	fileSize += (bitmapSize[0] + 3-((bitmapSize[0]-1)%4))*bitmapSize[1];
 
-	if(!fname) return false;											//Open file
+	if(!fname) return FILENAME_UNSPECIFIED;								//Open file
 	fopen_s(&outFile,name.c_str(),"wb");
-	if(!outFile) return false;				
+	if(!outFile) return UNABLE_TO_OPEN_FILE;				
 	
 	fwrite(head,2,1,outFile);											//"magic letters" BM
 	fwrite(&fileSize,4,1,outFile);										//File size

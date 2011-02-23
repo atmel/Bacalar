@@ -64,9 +64,9 @@ public:
 	static ImageManager<imDataType>* Create();
 	//bool PrepareBlancImage
 
-	bool Load3D(const char* fname, int frameSize);	//curently with zero-framing
-	bool LoadBMP(const char* fname);
-	bool SaveBmp(int idx, const char* fname, int slicingDir=-1, int sliPerLine=-1); //defaults: saving 2D image
+	int Load3D(const char* fname, int frameSize = -1);	//curently with zero-framing
+	int LoadBMP(const char* fname, int frameSize = -1);
+	int SaveBmp(int idx, const char* fname, int slicingDir=-1, int sliPerLine=-1); //defaults: saving 2D image
 
 
 };

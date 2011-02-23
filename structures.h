@@ -18,3 +18,12 @@ through the program
 #define INT_TRUE (65535)
 
 
+//errors
+#define BAD_IMAGE_FORMAT (-100)
+#define BAD_SUBIMAGE_DIMENSION (-101)
+#define NO_SUCH_FILE (-102)
+#define UNKNOWN_FILE_FORMAT (-103)
+#define BAD_SUBIMAGE_DIMENSIONS (-104)
+#define BAD_FRAMESIZE (-105)
+
+
