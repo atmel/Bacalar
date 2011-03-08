@@ -7,6 +7,7 @@
 */
 
 #include "Bacalar/Filter.h"	
+#include <math.h>
 
 template <typename imDataType>
 unsigned Filter<imDataType>::imageDim = 0;
@@ -120,3 +121,17 @@ float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA,
 	}
 	return 1;
 }	
+
+/*
+
+	Adds random noise to image
+
+	p4.k is in range 0-1000, determining noise level 0-<TYPE>_TRUE
+
+*/
+
+template <typename imDataType>
+float Filter<imDataType>::AddNoise (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+
+	rand
+}
