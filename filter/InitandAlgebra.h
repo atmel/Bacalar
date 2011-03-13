@@ -28,6 +28,13 @@ template <typename imDataType>
 unsigned long Filter<imDataType>::size = 0;
 
 template <typename imDataType>
+unsigned long Filter<imDataType>::lineUpperBound = 0;
+
+template <typename imDataType>
+unsigned long Filter<imDataType>::sliceUpperBound = 0;
+
+
+template <typename imDataType>
 SEManager<imDataType>* Filter<imDataType>::sem = NULL;
 
 template <typename imDataType>
@@ -43,7 +50,12 @@ bool Filter<imDataType>::Init(SEManager<imDataType> *_sem){
 	sem = _sem;
 
 	lineSize = imageDimensions[0]+2*frameSize;
-	if(imageDim == 3) sliceSize = lineSize*(imageDimensions[1]+2*frameSize);
+	lineUpperBound = (imageDimensions[1]+frameSize)*lineSize;
+	if(imageDim == 3){ 
+		sliceSize = lineSize*(imageDimensions[1]+2*frameSize);
+		sliceUpperBound = (imageDimensions[2]+frameSize)*sliceSize;	
+	}
+
 
 	return true;
 }		
@@ -54,17 +66,17 @@ template <>
 float Filter<float>::Add (float* dst, int seIndex, float* srcA, fourthParam<float> p4){
 
 	float val;
-	unsigned i,j,k;
+	unsigned long pos;
 	//3D
 
-	FOR3D(i,j,k){
-		if(srcA[k + j*lineSize + i*sliceSize]+p4.srcB[k + j*lineSize + i*sliceSize] > FLOAT_TRUE){
+	BEGIN_FOR3D(pos)
+		if(srcA[pos]+p4.srcB[pos] > FLOAT_TRUE){
 			val = FLOAT_TRUE;
 		}else{
-			val = srcA[k + j*lineSize + i*sliceSize]+p4.srcB[k + j*lineSize + i*sliceSize];
+			val = srcA[pos]+p4.srcB[pos];
 		}
-		dst[k + j*lineSize + i*sliceSize] = val;
-	}
+		dst[pos] = val;
+	END_FOR3D;
 	return 1;
 }	
 
@@ -72,17 +84,17 @@ template <>
 float Filter<unsigned int>::Add (unsigned int* dst, int seIndex, unsigned int* srcA, fourthParam<unsigned int> p4){
 
 	unsigned int val;
-	unsigned i,j,k;
+	unsigned long pos;
 	//3D
 
-	FOR3D(i,j,k){
-		if(srcA[k + j*lineSize + i*sliceSize]/2+p4.srcB[k + j*lineSize + i*sliceSize]/2 >= INT_TRUE/2){
+	BEGIN_FOR3D(pos)
+		if(srcA[pos]/2+p4.srcB[pos]/2 >= INT_TRUE/2){
 			val = INT_TRUE;
 		}else{
-			val = srcA[k + j*lineSize + i*sliceSize]+p4.srcB[k + j*lineSize + i*sliceSize];
+			val = srcA[pos]+p4.srcB[pos];
 		}
-		dst[k + j*lineSize + i*sliceSize] = val;
-	}
+		dst[pos] = val;
+	END_FOR3D;
 	return 1;
 }	
 
@@ -90,17 +102,17 @@ template <>
 float Filter<unsigned char>::Add (unsigned char* dst, int seIndex, unsigned char* srcA, fourthParam<unsigned char> p4){
 
 	unsigned char val;
-	unsigned i,j,k;
+	unsigned long pos;
 	//3D
 
-	FOR3D(i,j,k){
-		if(srcA[k + j*lineSize + i*sliceSize]/2+p4.srcB[k + j*lineSize + i*sliceSize]/2 >= CHAR_TRUE/2){
+	BEGIN_FOR3D(pos)
+		if(srcA[pos]/2+p4.srcB[pos]/2 >= CHAR_TRUE/2){
 			val = CHAR_TRUE;
 		}else{
-			val = srcA[k + j*lineSize + i*sliceSize]+p4.srcB[k + j*lineSize + i*sliceSize];
+			val = srcA[pos]+p4.srcB[pos];
 		}
-		dst[k + j*lineSize + i*sliceSize] = val;
-	}
+		dst[pos] = val;
+	END_FOR3D;
 	return 1;
 }	
 
@@ -108,17 +120,17 @@ float Filter<unsigned char>::Add (unsigned char* dst, int seIndex, unsigned char
 template <typename imDataType>		//A-B (lukasiewicz A and B)
 float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 
-	unsigned i,j,k;
+	unsigned long pos;
 	//3D
 
-	FOR3D(i,j,k){		
-		if(srcA[k + j*lineSize + i*sliceSize] < p4.srcB[k + j*lineSize + i*sliceSize]){
-			dst[k + j*lineSize + i*sliceSize] = 0;
+	BEGIN_FOR3D(pos)		
+		if(srcA[pos] < p4.srcB[pos]){
+			dst[pos] = 0;
 		}else{
-			dst[k + j*lineSize + i*sliceSize] = srcA[k + j*lineSize + i*sliceSize] -
-				p4.srcB[k + j*lineSize + i*sliceSize];
+			dst[pos] = srcA[pos] -
+				p4.srcB[pos];
 		}
-	}
+	END_FOR3D;
 	return 1;
 }	
 

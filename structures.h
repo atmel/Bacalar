@@ -19,11 +19,13 @@ through the program
 
 
 //errors
-#define BAD_IMAGE_FORMAT (-100)
-#define BAD_SUBIMAGE_DIMENSION (-101)
-#define NO_SUCH_FILE (-102)
-#define UNKNOWN_FILE_FORMAT (-103)
+#define BAD_IMAGE_FORMAT		(-100)
+#define BAD_SUBIMAGE_DIMENSION	(-101)
+#define NO_SUCH_FILE			(-102)
+#define UNKNOWN_FILE_FORMAT		(-103)
 #define BAD_SUBIMAGE_DIMENSIONS (-104)
-#define BAD_FRAMESIZE (-105)
+#define BAD_FRAMESIZE			(-105)
+#define FILENAME_UNSPECIFIED	(-106)
+#define UNABLE_TO_OPEN_FILE		(-107)
 
 

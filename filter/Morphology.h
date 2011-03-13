@@ -16,17 +16,17 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 	imDataType min;
 	structEl *se = sem->GetSE(seIndex);
 	memset(dst,0,size*sizeof(imDataType));
-	unsigned i,j,k;
+	unsigned long pos;
 
 	//3D
-	FOR3D(i,j,k){			
-		min = srcA[k + j*lineSize + i*sliceSize + se->nb[0]];		//find maximum
+	BEGIN_FOR3D(pos)			
+		min = srcA[pos + se->nb[0]];		//find minimum
 		for(unsigned m=1;m < se->nbSize; m++){
-			if(min > srcA[k + j*lineSize + i*sliceSize + se->nb[m]])
-				min = srcA[k + j*lineSize + i*sliceSize + se->nb[m]];
+			if(min > srcA[pos + se->nb[m]])
+				min = srcA[pos + se->nb[m]];
 		}
-		dst[k + j*lineSize + i*sliceSize] = min;
-	}
+		dst[pos] = min;
+	END_FOR3D;
 	return 1;
 }
 
@@ -36,17 +36,17 @@ float Filter<imDataType>::Dilatate(imDataType* dst, int seIndex, imDataType* src
 	imDataType max;
 	structEl *se = sem->GetSE(seIndex);
 	memset(dst,0,size*sizeof(imDataType));
-	unsigned i,j,k;
+	unsigned long pos;
 
 	//3D
-	FOR3D(i,j,k){			
-		min = srcA[k + j*lineSize + i*sliceSize + se->nb[0]];		//find maximum
+	BEGIN_FOR3D(pos)			
+		max = srcA[pos + se->nb[0]];		//find minimum
 		for(unsigned m=1;m < se->nbSize; m++){
-			if(max < srcA[k + j*lineSize + i*sliceSize + se->nb[m]])
-				max = srcA[k + j*lineSize + i*sliceSize + se->nb[m]];
+			if(max < srcA[pos + se->nb[m]])
+				max = srcA[pos + se->nb[m]];
 		}
-		dst[k + j*lineSize + i*sliceSize] = max;
-	}
+		dst[pos] = max;
+	END_FOR3D;
 	return 1;
 }
 

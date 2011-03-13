@@ -31,12 +31,13 @@ union fourthParam{
 template <typename imDataType>
 class Filter : private ImageInfo{
 
-	static unsigned imageDim;						//2D, 3D
-	static unsigned imageDimensions[3];				//in pixels
-	static unsigned frameSize, lineSize, sliceSize;	//width in pixels
-	static unsigned long size;						//total size of image (including frame) in pixels
+	static unsigned imageDim;							//2D, 3D
+	static unsigned imageDimensions[3];					//in pixels
+	static unsigned frameSize, lineSize, sliceSize;		//width in pixels
+	static unsigned long sliceUpperBound, lineUpperBound;//for fast FORxD macro
+	static unsigned long size;							//total size of image (including frame) in pixels
 	static SEManager<imDataType> *sem;
-	//static float CPU[XY];						//array with function pointers for easy access
+	//static float CPU[XY];								//array with function pointers for easy access
 	//static float GPU[XY];
 
 	//supporting functions (CPU):
@@ -78,10 +79,15 @@ public:
 
 */
 
-#define FOR3D(SLOWEST,MID,FASTEST)\
-for(SLOWEST=frameSize;SLOWEST<imageDimensions[2]+frameSize;SLOWEST++)\
-for(MID=frameSize;MID<imageDimensions[1]+frameSize;MID++)\
-for(FASTEST=frameSize;FASTEST<imageDimensions[0]+frameSize;FASTEST++)
+#define BEGIN_FOR3D(pos)\
+for(unsigned long col,ln,lnAndSl,sl=frameSize*sliceSize;sl<sliceUpperBound;sl+=sliceSize)\
+for(ln=frameSize*lineSize;ln<lineUpperBound;ln+=lineSize){\
+lnAndSl=ln+sl;\
+for(col=frameSize;col<imageDimensions[0]+frameSize;col++){\
+pos=lnAndSl+col;
+
+#define END_FOR3D }}
+
 
 
 

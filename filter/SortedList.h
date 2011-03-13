@@ -10,20 +10,20 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 	structEl *se = sem->GetSE(seIndex);
 	memset(dst,0,size*sizeof(imDataType));
 	values = new imDataType[se->nbSize];
-	Filter<imDataType>::QsortOpt(NULL,se->nbSize);
-	unsigned i,j,k;
+	Filter<imDataType>::QsortOpt(NULL,se->nbSize);		//initialize qsort
+	unsigned long pos;
 
 	//3D
-	FOR3D(i,j,k){			
+	BEGIN_FOR3D(pos)		
 		for(unsigned m=1;m < se->nbSize; m++){
-			values[m] = srcA[k + j*lineSize + i*sliceSize + se->nb[m]];
+			values[m] = srcA[pos + se->nb[m]];
 		}
 		Filter<imDataType>::QsortOpt(values);
 		if(se->nbSize%2){							//odd
-			dst[k + j*lineSize + i*sliceSize] = values[se->nbSize/2];
+			dst[pos] = values[se->nbSize/2];
 		}else{
-			dst[k + j*lineSize + i*sliceSize] = (values[se->nbSize/2]+values[se->nbSize/2+1])/2;
+			dst[pos] = (values[se->nbSize/2]+values[se->nbSize/2+1])/2;
 		}
-	}
+	END_FOR3D;
 	return 1;
 }
