@@ -8,7 +8,7 @@ template <typename imDataType>
 float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 	imDataType *values;
 	structEl *se = sem->GetSE(seIndex);
-	memset(dst,0,size*sizeof(imDataType));
+	memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 	values = new imDataType[se->nbSize];
 	Filter<imDataType>::QsortOpt(NULL,se->nbSize);		//initialize qsort
 	unsigned long pos;

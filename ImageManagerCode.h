@@ -18,6 +18,7 @@ ImageManager<imDataType>::ImageManager(){
 	
 	singletonFlag = 1;
 	image.clear();
+	gpuImage.clear();
 }
 
 /*
@@ -137,6 +138,8 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 	image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255;
 
 	cout << "Data read\n";
+	
+	ComputeMetrics();
 	return true;
 }
 

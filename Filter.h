@@ -27,15 +27,22 @@ union fourthParam{
 	} int2;
 };
 
+//#define imageDim GetImageDim
+//#define imageDimensions\[0\] GetImageDimensions(0)
+//#define imageDimensions\[1\] GetImageDimensions(1)
+//#define imageDimensions\[2\] GetImageDimensions(2)
+//#define frameSize GetFrameSize()
+//#define lineSize GetLineSize()
+//#define sliceSize GetSliceSize()
 
 template <typename imDataType>
 class Filter : private ImageInfo{
 
-	static unsigned imageDim;							//2D, 3D
-	static unsigned imageDimensions[3];					//in pixels
-	static unsigned frameSize, lineSize, sliceSize;		//width in pixels
+	//static unsigned imageDim;							//2D, 3D
+	//static unsigned imageDimensions[3];					//in pixels
+	//static unsigned frameSize, lineSize, sliceSize;		//width in pixels
 	static unsigned long sliceUpperBound, lineUpperBound;//for fast FORxD macro
-	static unsigned long size;							//total size of image (including frame) in pixels
+	//static unsigned long size;							//total size of image (including frame) in pixels
 	static SEManager<imDataType> *sem;
 	//static float CPU[XY];								//array with function pointers for easy access
 	//static float GPU[XY];
@@ -80,10 +87,10 @@ public:
 */
 
 #define BEGIN_FOR3D(pos)\
-for(unsigned long col,ln,lnAndSl,sl=frameSize*sliceSize;sl<sliceUpperBound;sl+=sliceSize)\
-for(ln=frameSize*lineSize;ln<lineUpperBound;ln+=lineSize){\
+for(unsigned long col,ln,lnAndSl,sl=GetFrameSize()*GetSliceSize(); sl<sliceUpperBound; sl+=GetSliceSize())\
+for(ln=GetFrameSize()*GetLineSize(); ln<lineUpperBound; ln+=GetLineSize()){\
 lnAndSl=ln+sl;\
-for(col=frameSize;col<imageDimensions[0]+frameSize;col++){\
+for(col=GetFrameSize();col<GetDimensions(0)+GetFrameSize();col++){\
 pos=lnAndSl+col;
 
 #define END_FOR3D }}
@@ -97,3 +104,13 @@ pos=lnAndSl+col;
 #include "Bacalar/filter/SortedList.h"
 #include "Bacalar/filter/Walschlist.h"
 #include "Bacalar/filter/fastsort.h"
+
+
+//#undef imageDim 
+//#undef imageDimensions\[0\] 
+//#undef imageDimensions\[1\] 
+//#undef imageDimensions\[2\] 
+//#undef frameSize 
+//#undef lineSize 
+//#undef sliceSize 
+

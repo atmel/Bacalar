@@ -9,9 +9,12 @@
 	Setter functions include error check against loading multiple images with different dimmensions
 */
 
-int ImageInfo::imageDim = 0;
-int ImageInfo::imageDimensions[3] = {0,0,0};
-int ImageInfo::frameSize = 0;
+unsigned ImageInfo::imageDim = 0;
+unsigned ImageInfo::imageDimensions[3] = {0,0,0};
+unsigned ImageInfo::frameSize = 0;
+unsigned ImageInfo::imageLineSize = 0; 
+unsigned ImageInfo::imageSliceSize = 0;
+unsigned ImageInfo::imageTotalPixelSize = 0;
 
 bool ImageInfo::SetDim(int d){
 	if(((imageDim != 0)&&(imageDim != d))||(d < 0)) return false;
@@ -28,7 +31,13 @@ bool ImageInfo::SetFrameSize(int s){
 	frameSize = s;
 	return true;
 }
+bool ImageInfo::ComputeMetrics(){
+	imageLineSize = imageDimensions[0]+2*frameSize;
+	imageSliceSize = imageLineSize*(imageDimensions[1]+2*frameSize);
 
-int ImageInfo::GetDim(){return imageDim;}
-int ImageInfo::GetDimensions(int index){return imageDimensions[index];}
-int ImageInfo::GetFrameSize(){return frameSize;}
+	imageTotalPixelSize = 1;
+	for(unsigned i=0;i<imageDim;i++){ 	
+		imageTotalPixelSize *= imageDimensions[i] + 2*frameSize;			//total image size (inc frame) 2D/3D
+	}
+	return true;
+}

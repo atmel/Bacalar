@@ -9,23 +9,23 @@
 #include "Bacalar/Filter.h"	
 #include <math.h>
 
-template <typename imDataType>
-unsigned Filter<imDataType>::imageDim = 0;
-
-template <typename imDataType>
-unsigned Filter<imDataType>::imageDimensions[3] = {0,0,0};	
-
-template <typename imDataType>
-unsigned Filter<imDataType>::frameSize = 0;
-
-template <typename imDataType>
-unsigned Filter<imDataType>::lineSize = 0; 
-
-template <typename imDataType>
-unsigned Filter<imDataType>::sliceSize = 0;
-
-template <typename imDataType>
-unsigned long Filter<imDataType>::size = 0;
+//template <typename imDataType>
+//unsigned Filter<imDataType>::imageDim = 0;
+//
+//template <typename imDataType>
+//unsigned Filter<imDataType>::imageDimensions[3] = {0,0,0};	
+//
+//template <typename imDataType>
+//unsigned Filter<imDataType>::frameSize = 0;
+//
+//template <typename imDataType>
+//unsigned Filter<imDataType>::lineSize = 0; 
+//
+//template <typename imDataType>
+//unsigned Filter<imDataType>::sliceSize = 0;
+//
+//template <typename imDataType>
+//unsigned long Filter<imDataType>::size = 0;
 
 template <typename imDataType>
 unsigned long Filter<imDataType>::lineUpperBound = 0;
@@ -39,21 +39,21 @@ SEManager<imDataType>* Filter<imDataType>::sem = NULL;
 
 template <typename imDataType>
 bool Filter<imDataType>::Init(SEManager<imDataType> *_sem){
-	imageDim = ImageInfo::GetDim();							
-	frameSize = ImageInfo::GetFrameSize();
+	//imageDim = ImageInfo::GetDim();							
+	//frameSize = ImageInfo::GetFrameSize();
 
-	size = 1;
-	for(unsigned i=0;i<imageDim;i++){ 
-		imageDimensions[i] = ImageInfo::GetDimensions(i);	
-		size *= imageDimensions[i] + 2*frameSize;			//total image size (inc frame) 2D/3D
-	}
+	//size = 1;
+	//for(unsigned i=0;i<imageDim;i++){ 
+	//	imageDimensions[i] = ImageInfo::GetDimensions(i);	
+	//	size *= imageDimensions[i] + 2*frameSize;			//total image size (inc frame) 2D/3D
+	//}
 	sem = _sem;
 
-	lineSize = imageDimensions[0]+2*frameSize;
-	lineUpperBound = (imageDimensions[1]+frameSize)*lineSize;
-	if(imageDim == 3){ 
-		sliceSize = lineSize*(imageDimensions[1]+2*frameSize);
-		sliceUpperBound = (imageDimensions[2]+frameSize)*sliceSize;	
+	//lineSize = imageDimensions[0]+2*frameSize;
+	lineUpperBound = (GetDimensions(1)+GetFrameSize())*GetLineSize();
+	if(GetDim() == 3){ 
+		//sliceSize = lineSize*(imageDimensions[1]+2*frameSize);
+		sliceUpperBound = (GetDimensions(2)+GetFrameSize())*GetSliceSize();	
 	}
 
 

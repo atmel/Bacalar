@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Bacalar/cuda/CudaInfo.h"
 /*
 
 	File topology:
@@ -35,34 +36,41 @@ using namespace std;
 
 class ImageInfo{							//abstract class
 
-	static int imageDim;
-	static int imageDimensions[3];
-	static int frameSize;
+	static unsigned imageDim, imageDimensions[3], frameSize;
+
+	//image metrics
+	static unsigned imageLineSize, imageSliceSize, imageTotalPixelSize;
 
 public:
 	bool SetDim(int d);						//sets image dimensionality (2-3)
 	bool SetDimensions(int idx ,int dim);	//indexes 0,1,2
 	bool SetFrameSize(int s);
+	bool ComputeMetrics();
 
-	static int GetDim();							//gets image dimensionality
-	static int GetDimensions(int index);			//indexes 0,1,2
-	static int GetFrameSize();
+		//static because of filter is abstract and need to use it
+	static inline unsigned GetDim(){return imageDim;}					
+	static inline unsigned GetDimensions(unsigned index){return imageDimensions[index];}
+	static inline unsigned GetFrameSize(){return frameSize;}
+	static inline unsigned GetLineSize(){return imageLineSize;}
+	static inline unsigned GetSliceSize(){return imageSliceSize;}
+	static inline unsigned GetTotalPixelSize(){return imageTotalPixelSize;}
 };
 
 
 
 
 template <typename imDataType>
-class ImageManager : private ImageInfo
+class ImageManager : private ImageInfo, private CudaInfo
 {
 	static bool singletonFlag;
 public:vector<imDataType*> image;						//array of images
+	   vector<imDataType*> gpuImage;
 	
 	ImageManager();
 
 public:
 	static ImageManager<imDataType>* Create();
-	//bool PrepareBlancImage
+	int PrepareBlankImage(bool gpu);					//creates empty image for filter result
 
 	int Load3D(const char* fname, int frameSize = -1);	//curently with zero-framing
 	int LoadBMP(const char* fname, int frameSize = -1);
