@@ -37,7 +37,7 @@ FilterManager<imDataType>::FilterManager(SEManager<imDataType> *_SEMan, ImageMan
 
 template <typename imDataType>
 bool FilterManager<imDataType>::Parse2Filter(string *in){
-
+	
 }
 
 ////template <typename imDataType> 

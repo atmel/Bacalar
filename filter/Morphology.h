@@ -35,7 +35,7 @@ template <typename imDataType>
 float Filter<imDataType>::Dilatate(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 	imDataType max;
 	structEl *se = sem->GetSE(seIndex);
-	memset(dst,0,size*sizeof(imDataType));
+	memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 	unsigned long pos;
 
 	//3D

@@ -60,6 +60,7 @@ public:
 	structEl *GetSE(int index);
 	bool DeleteAll();							//SE refresh - SEs still have to be parsed, so merging is worthless 
 	int Parse2SE(string *name, float *mask);	//float mask[dictsize]
+	bool SendToGpu();
 
 
 

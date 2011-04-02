@@ -49,9 +49,9 @@ class Filter : private ImageInfo{
 
 	//supporting functions (CPU):
 	inline imDataType Min(imDataType x, imDataType y)
-		{return x>y?y:x}
+		{return x>y?y:x;}
 	inline imDataType Max(imDataType x, imDataType y)
-		{return x<y?y:x}
+		{return x<y?y:x;}
 
 public:static bool QsortOpt(imDataType *base, unsigned initBaseLenght = 0); 
 

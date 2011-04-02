@@ -46,6 +46,7 @@ public:
 	bool SetDimensions(int idx ,int dim);	//indexes 0,1,2
 	bool SetFrameSize(int s);
 	bool ComputeMetrics();
+	bool SendToGpu();
 
 		//static because of filter is abstract and need to use it
 	static inline unsigned GetDim(){return imageDim;}					
@@ -70,7 +71,7 @@ public:vector<imDataType*> image;						//array of images
 
 public:
 	static ImageManager<imDataType>* Create();
-	int PrepareBlankImage(bool gpu);					//creates empty image for filter result
+	int PrepareBlankImage(bool gpu, int index =-1);					//creates empty image for filter result
 
 	int Load3D(const char* fname, int frameSize = -1);	//curently with zero-framing
 	int LoadBMP(const char* fname, int frameSize = -1);

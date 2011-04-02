@@ -1,4 +1,5 @@
 #include "SEManager.h"
+#include "Bacalar/cuda/variables.cu"
 
 
 #include <iostream>
@@ -113,4 +114,16 @@ int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 template<typename imDataType>
 structEl* SEManager<imDataType>::GetSE(int index){
 	return se[index];
+}
+
+template<typename imDataType>
+bool SEManager<imDataType>::SendToGpu(){
+	for(int i=0;i<se.size();i++){
+		cudaMemcpyToSymbol(&gpuNbSize[i], &se[i]->nbSize, sizeof(unsigned));
+		cudaMalloc(&gpuNb[i],sizeof(unsigned)*se[i]->nbSize);
+		cudaMemcpy(&gpuNb[i],se[i]->nb,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cudaMalloc(&gpuMask[i],sizeof(unsigned)*se[i]->nbSize);
+		cudaMemcpy(&gpuMask[i],se[i]->mask,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+	}
+	return true;
 }

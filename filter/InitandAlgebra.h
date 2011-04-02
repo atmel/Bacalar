@@ -145,5 +145,5 @@ float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA,
 template <typename imDataType>
 float Filter<imDataType>::AddNoise (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 
-	rand
+	//rand
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include "Bacalar/ImageManager.h"
+#include "Bacalar/cuda/variables.cu"
+#include <cuda.h>
 
 /*
 	ImageInfo declared in ImageManager.h
@@ -39,5 +41,15 @@ bool ImageInfo::ComputeMetrics(){
 	for(unsigned i=0;i<imageDim;i++){ 	
 		imageTotalPixelSize *= imageDimensions[i] + 2*frameSize;			//total image size (inc frame) 2D/3D
 	}
+	return true;
+}
+
+bool ImageInfo::SendToGpu(){
+	cudaMemcpyToSymbol(&gpuImageDim, &imageDim, (unsigned)sizeof(unsigned));
+	cudaMemcpyToSymbol(gpuImageDimensions, imageDimensions, 3*sizeof(unsigned));
+	cudaMemcpyToSymbol(&gpuFrameSize, &frameSize, sizeof(unsigned));
+	cudaMemcpyToSymbol(&gpuImageLineSize, &imageLineSize, sizeof(unsigned));
+	cudaMemcpyToSymbol(&gpuImageSliceSize, &imageSliceSize, sizeof(unsigned));
+	cudaMemcpyToSymbol(&gpuImageTotalPixelSize, &imageTotalPixelSize, sizeof(unsigned));
 	return true;
 }

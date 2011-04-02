@@ -91,7 +91,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 
 	//read the img file CPU
 
-	if(frameSize != -1){
+	if(frameSize != -1){									//save frame size (if first image)
 		if(!SetFrameSize(frameSize)) return BAD_FRAMESIZE;
 	}
 
@@ -110,9 +110,10 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 
 	if(!inFile2.is_open()) return NO_SUCH_FILE;
 
+	ComputeMetrics();				//compute derivated metrics and save them in parrent class
+
 	cout << "File "<< name << " opened\n";
-	image.push_back(NULL);					//initialize vector item
-	image[curIm] = new imDataType[dims[0]*dims[1]*dims[2]];
+	PrepareBlankImage(false);		//initialize image vectors
 
 	raw = new unsigned char[GetDimensions(0)*GetDimensions(1)*GetDimensions(2)];
 	inFile2.read((char*)raw,GetDimensions(0)*GetDimensions(1)*GetDimensions(2));
@@ -139,14 +140,13 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 
 	cout << "Data read\n";
 	
-	ComputeMetrics();
 	return true;
 }
 
 
 template <typename imDataType>
 int ImageManager<imDataType>::LoadBMP(const char* fname, int frameSize){
-
+	return 0;
 }
 
 
@@ -283,6 +283,33 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 	
 	fclose(outFile);
 	return true;
+}
 
+/*	
+	Creates blank image in RAM or in GPU RAM, image is added behind last image
 
+	image vector<> entries are added for both GPU and CPU but one stays NULL
+	does not check UseCuda flag
+*/
+template <typename imDataType>
+int ImageManager<imDataType>::PrepareBlankImage(bool gpu, int index){
+	
+	int idx;
+	//add new image
+	if(index == -1){
+		idx = image.size();
+		image.push_back(NULL);
+		gpuImage.push_back(NULL);
+	}else{
+		idx = index;
+	}
+
+	if(gpu){
+		if(gpuImage[idx] == NULL) cudaMalloc(&gpuImage[idx],sizeof(imDataType)*GetTotalPixelSize());
+		cudaMemset(&gpuImage[idx],0,sizeof(imDataType)*GetTotalPixelSize());
+	}else{
+		if(image[idx] == NULL)image[idx] = new imDataType[GetTotalPixelSize()];
+		memset(image[idx],0,sizeof(imDataType)*GetTotalPixelSize());
+	}
+	return true;
 }
