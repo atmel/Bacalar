@@ -1,4 +1,7 @@
 #pragma once
+#ifndef FILTER_MANAGER
+#define FILTER_MANAGER
+
 #include "Bacalar/ImageManager.h"
 #include "Bacalar/SEManager.h"
 #include "Bacalar/Filter.h"
@@ -53,3 +56,5 @@ public:
 };
 
 #include "Bacalar/FilterManagerCode.h"
+
+#endif

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef FILTER_CLASS
+#define FILTER_CLASS
+
 //#include <CUDAEnviroment header>
 #include <Bacalar/structures.h>
 
@@ -17,6 +20,7 @@
 #include "Bacalar/SEManager.h"
 #include "Bacalar/ImageManager.h"
 #include "Bacalar/structures.h"		//for basic definitions
+#include "Bacalar/cuda/CudaInfo.h"
 
 template <typename imDataType>
 union fourthParam{
@@ -36,7 +40,7 @@ union fourthParam{
 //#define sliceSize GetSliceSize()
 
 template <typename imDataType>
-class Filter : private ImageInfo{
+class Filter : private ImageInfo, private CudaInfo{
 
 	//static unsigned imageDim;							//2D, 3D
 	//static unsigned imageDimensions[3];					//in pixels
@@ -98,7 +102,7 @@ pos=lnAndSl+col;
 
 
 
-
+#include "Bacalar/filter/kernels.h"
 #include "Bacalar/filter/InitandAlgebra.h"
 #include "Bacalar/filter/Morphology.h"
 #include "Bacalar/filter/SortedList.h"
@@ -113,4 +117,6 @@ pos=lnAndSl+col;
 //#undef frameSize 
 //#undef lineSize 
 //#undef sliceSize 
+
+#endif
 

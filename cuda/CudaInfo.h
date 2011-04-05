@@ -14,7 +14,9 @@ class CudaInfo{
 	static bool useCuda;
 
 public:
-
-	bool UseCuda(){return useCuda;}
+	static bool EnableCuda(bool flag){return (useCuda = flag);} 
+	static bool UseCuda(){return useCuda;}
 
 };
+
+bool CudaInfo::useCuda = false;

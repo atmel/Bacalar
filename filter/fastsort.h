@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef FASTSORT
+#define FASTSORT
+
 #include "Bacalar/Filter.h"
 #include <math.h>
 
@@ -88,3 +91,5 @@ START:
 	}
 	return true;
 }
+
+#endif

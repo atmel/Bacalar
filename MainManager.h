@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef MAIN_MANAGER
+#define MAIN_MANAGER
+
 /*
 	Main definition file - include only this in main
 
@@ -31,3 +34,5 @@ public:
 	bool Launch();
 
 };
+
+#endif

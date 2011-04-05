@@ -118,12 +118,37 @@ structEl* SEManager<imDataType>::GetSE(int index){
 
 template<typename imDataType>
 bool SEManager<imDataType>::SendToGpu(){
-	for(int i=0;i<se.size();i++){
-		cudaMemcpyToSymbol(&gpuNbSize[i], &se[i]->nbSize, sizeof(unsigned));
+	/*for(unsigned i=0;i<se.size();i++){
 		cudaMalloc(&gpuNb[i],sizeof(unsigned)*se[i]->nbSize);
-		cudaMemcpy(&gpuNb[i],se[i]->nb,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMemcpy((void*)gpuNb[i],se[i]->nb,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		cudaMalloc(&gpuMask[i],sizeof(unsigned)*se[i]->nbSize);
-		cudaMemcpy(&gpuMask[i],se[i]->mask,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMemcpy((void*)gpuMask[i],se[i]->mask,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	}*/
+	unsigned sizes[MAX_SE];
+	for(unsigned i=0;i<se.size();i++){
+		sizes[i] = se[i]->nbSize;
 	}
+	cudaMemcpyToSymbol(gpuNbSize, sizes, sizeof(unsigned)*se.size());
+	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	unsigned *nbs[MAX_SE];
+	float *masks[MAX_SE];
+	for(unsigned i=0;i<se.size();i++){
+		cudaMalloc(&(nbs[i]),sizeof(unsigned)*se[i]->nbSize);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMemcpy((void*)(nbs[i]),se[i]->nb,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMalloc(&(masks[i]),sizeof(float)*se[i]->nbSize);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMemcpy((void*)(masks[i]),se[i]->mask,sizeof(float)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	}
+	cudaMemcpyToSymbol(gpuNb, nbs, sizeof(unsigned*)*se.size());
+	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	cudaMemcpyToSymbol(gpuMask, masks, sizeof(float*)*se.size());
+	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	return true;
 }

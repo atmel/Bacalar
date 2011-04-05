@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef INIT_ALGEBRA
+#define INIT_ALGEBRA
+
+
 /*
 
 	Must be included first in Filter.h, contains declarations of static variables
@@ -144,6 +148,8 @@ float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA,
 
 template <typename imDataType>
 float Filter<imDataType>::AddNoise (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
-
+	return 1; 
 	//rand
 }
+
+#endif

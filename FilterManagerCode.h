@@ -37,7 +37,7 @@ FilterManager<imDataType>::FilterManager(SEManager<imDataType> *_SEMan, ImageMan
 
 template <typename imDataType>
 bool FilterManager<imDataType>::Parse2Filter(string *in){
-	
+	return 1; 
 }
 
 ////template <typename imDataType> 
@@ -47,5 +47,5 @@ bool FilterManager<imDataType>::Parse2Filter(string *in){
 
 template <typename imDataType> 
 bool FilterManager<imDataType>::LaunchFilter(){
-
+	return 1; 
 }

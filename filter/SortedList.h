@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef SORTED_LIST
+#define SORTED_LIST
+
 #include "Bacalar/Filter.h"
 
 
@@ -25,5 +28,8 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 			dst[pos] = (values[se->nbSize/2]+values[se->nbSize/2+1])/2;
 		}
 	END_FOR3D;
+
 	return 1;
 }
+
+#endif

@@ -40,6 +40,7 @@ class ImageInfo{							//abstract class
 
 	//image metrics
 	static unsigned imageLineSize, imageSliceSize, imageTotalPixelSize;
+	static unsigned imageWidth, imageSliceArea, imageSize;		
 
 public:
 	bool SetDim(int d);						//sets image dimensionality (2-3)
@@ -55,6 +56,7 @@ public:
 	static inline unsigned GetLineSize(){return imageLineSize;}
 	static inline unsigned GetSliceSize(){return imageSliceSize;}
 	static inline unsigned GetTotalPixelSize(){return imageTotalPixelSize;}
+	static inline unsigned GetImageSize(){return imageSize;}
 };
 
 

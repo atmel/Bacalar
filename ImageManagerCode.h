@@ -136,9 +136,17 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 				}
 				l++;
 			}
-	image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255;
+	//image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255;
 
 	cout << "Data read\n";
+
+	if(UseCuda()){				//GPU part
+		cout << "Sending image to GPU\n";
+		SendToGpu();			//send metrics to gpu
+		PrepareBlankImage(true,curIm);
+		cudaMemcpy(gpuImage[curIm],image[curIm],sizeof(imDataType)*GetTotalPixelSize(),cudaMemcpyHostToDevice);
+		cout << "LoadBMP cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	}
 	
 	return true;
 }
@@ -194,6 +202,13 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 
 	
 	//blockSize = sliceSize*sliPerLine;
+
+	//move image from GPU if needed
+	if(UseCuda()){
+		PrepareBlankImage(false,idx);
+		cudaMemcpy(image[idx],gpuImage[idx],sizeof(imDataType)*GetTotalPixelSize(),cudaMemcpyDeviceToHost);
+		cout << "SaveBMP cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+	}
 	
 	unsigned char* imageData = new unsigned char[bitmapSize[0]*bitmapSize[1]];
 	imDataType value;
@@ -306,7 +321,9 @@ int ImageManager<imDataType>::PrepareBlankImage(bool gpu, int index){
 
 	if(gpu){
 		if(gpuImage[idx] == NULL) cudaMalloc(&gpuImage[idx],sizeof(imDataType)*GetTotalPixelSize());
-		cudaMemset(&gpuImage[idx],0,sizeof(imDataType)*GetTotalPixelSize());
+		cout << "Prepade blank1 cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		cudaMemset((void*)gpuImage[idx],0,sizeof(imDataType)*GetTotalPixelSize());
+		cout << "Prepade blank cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}else{
 		if(image[idx] == NULL)image[idx] = new imDataType[GetTotalPixelSize()];
 		memset(image[idx],0,sizeof(imDataType)*GetTotalPixelSize());

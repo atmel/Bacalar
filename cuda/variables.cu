@@ -10,6 +10,7 @@ __constant__ float *gpuMask[MAX_SE];
 
 //metrics
 __constant__ unsigned gpuImageDim, gpuImageDimensions[3], gpuFrameSize;
-__constant__ unsigned gpuImageLineSize, gpuImageSliceSize, gpuImageTotalPixelSize;
+__constant__ unsigned gpuImageLineSize, gpuImageSliceSize, gpuImageTotalPixelSize;	//inluding frame
+__constant__ unsigned gpuImageWidth, gpuImageSliceArea, gpuImageSize;				//without frame
 
 #endif
