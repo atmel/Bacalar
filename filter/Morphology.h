@@ -11,16 +11,20 @@
 
 #include "Bacalar/Filter.h"
 
-
+#define TPB 512
 
 
 template <typename imDataType>
 float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 	if(UseCuda()){
 		cout << "eroding on GPU\n";
-		unsigned blocks = GetImageSize()/512 + 1;
+		unsigned blocks = GetImageSize()/TPB + 1;
 		cout << blocks <<" kernel blocks used\n";
-		GPUerode<imDataType><<<blocks,512>>>(dst,seIndex,srcA);
+		unsigned extraMem = ((sem->GetSE(seIndex)->nbSize)/TPB + 1)*sizeof(unsigned);
+		cout << extraMem <<" extra mem per thread used\n";
+
+		GPUerode<imDataType><<<blocks,TPB>>>(dst,seIndex,srcA);
+		
 		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		return 1;
 	}else{

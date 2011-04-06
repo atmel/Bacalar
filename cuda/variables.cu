@@ -13,4 +13,6 @@ __constant__ unsigned gpuImageDim, gpuImageDimensions[3], gpuFrameSize;
 __constant__ unsigned gpuImageLineSize, gpuImageSliceSize, gpuImageTotalPixelSize;	//inluding frame
 __constant__ unsigned gpuImageWidth, gpuImageSliceArea, gpuImageSize;				//without frame
 
+//__shared__ unsigned* nb;	//for nb fast usage
+
 #endif
