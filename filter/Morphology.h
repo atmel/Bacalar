@@ -10,20 +10,28 @@
 */
 
 #include "Bacalar/Filter.h"
+#include <windows.h>
 
-#define TPB (256)
+#define TPB (64)
 
 
 template <typename imDataType>
 float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+	LARGE_INTEGER frq, start, stop;
 	if(UseCuda()){
 		cout << "eroding on GPU\n";
 		unsigned blocks = GetImageSize()/TPB + 1;
 		cout << blocks <<" kernel blocks used\n";
 		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
 		cout << extraMem <<" extra mem per block used\n";
+		
+			QueryPerformanceCounter(&start);
 
 		GPUerode<imDataType><<<blocks,TPB,extraMem>>>(dst,seIndex,srcA);
+		cudaThreadSynchronize();
+			QueryPerformanceCounter(&stop);
+
+			cout << "GpuErode ticks: " << stop.QuadPart-start.QuadPart << '\n';
 		
 		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		return 1;
@@ -33,6 +41,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		unsigned long pos;
 
+			QueryPerformanceCounter(&start);
 		//3D
 		BEGIN_FOR3D(pos)			
 			min = srcA[pos + se->nb[0]];		//find minimum
@@ -42,6 +51,10 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 			}
 			dst[pos] = min;
 		END_FOR3D;
+
+			QueryPerformanceCounter(&stop);
+
+			cout << "CPUErode ticks: " << stop.QuadPart-start.QuadPart << '\n';
 		return 1;
 	}
 }
