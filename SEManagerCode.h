@@ -1,5 +1,5 @@
 #include "SEManager.h"
-#include "Bacalar/cuda/variables.cu"
+#include "Bacalar/cuda/variables.h"
 
 
 #include <iostream>
@@ -49,12 +49,12 @@ SEManager<imDataType>::SEManager(){
 	
 	se.clear();
 
-	for(int i=0; i< mSize; i++){
+	/*for(int i=0; i< mSize; i++){
 		for(int j=0; j< mSize*mSize; j++){
 			cout << dictionary[j + i*mSize*mSize] << " ";
 		}
 		cout << "\n\n";
-	}
+	}*/
 	singletonFlag = 1;
 }
 

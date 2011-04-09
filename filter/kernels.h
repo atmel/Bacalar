@@ -2,7 +2,7 @@
 
 #ifndef CUDA_KERNELS
 #define CUDA_KERNELS
-#include "Bacalar/cuda/variables.cu"
+#include "Bacalar/cuda/variables.h"
 
 template<typename imDataType>
 __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
@@ -11,6 +11,7 @@ __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
 	extern __shared__ unsigned nb[];	//points to per block allocated shared memory
 	unsigned thread = 0;				//temporary usage as incremental varible
 
+			//will run multiple times only if nbsize > number of threads
 	for(thread = 0;gpuNbSize[seIndex] > thread*blockDim.x; thread++){
 		if(threadIdx.x + blockDim.x*thread < gpuNbSize[seIndex]){	//copy only contents of nb array
 			nb[threadIdx.x + blockDim.x*thread] = gpuNb[seIndex][threadIdx.x + blockDim.x*thread];
@@ -20,16 +21,17 @@ __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
 
 		//compute actual index to image array
 	thread = threadIdx.x + blockIdx.x*blockDim.x;	//proper usage as global thread ID
+	
 	if(thread >= gpuImageSize) return;				//terminate excessive threads
 	unsigned arrIdx = (gpuFrameSize + thread/gpuImageSliceArea)*gpuImageSliceSize;
 	thread = thread % gpuImageSliceArea;
 	arrIdx += (gpuFrameSize + thread/gpuImageWidth)*gpuImageLineSize + (gpuFrameSize + thread%gpuImageWidth);
 
 		//erode (find min)
-	imDataType _min = srcA[arrIdx + nb[0]];
+	imDataType _min = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
 	for(thread = 1; thread < gpuNbSize[seIndex]; thread++){
-		if(_min > srcA[arrIdx + nb[thread]]){
-			_min = srcA[arrIdx + nb[thread]];
+		if(_min > tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread])){
+			_min = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
 		}
 	}
 	dst[arrIdx] = _min;

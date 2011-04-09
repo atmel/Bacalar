@@ -1,6 +1,6 @@
 #pragma once
 #include "Bacalar/ImageManager.h"
-#include "Bacalar/cuda/variables.cu"
+#include "Bacalar/cuda/variables.h"
 #include <cuda.h>
 
 /*

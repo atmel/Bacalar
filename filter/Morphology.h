@@ -12,18 +12,29 @@
 #include "Bacalar/Filter.h"
 #include <windows.h>
 
-#define TPB (64)
+#define TPB (512)
 
 
 template <typename imDataType>
 float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 	LARGE_INTEGER frq, start, stop;
+	QueryPerformanceFrequency(&frq);
 	if(UseCuda()){
 		cout << "eroding on GPU\n";
 		unsigned blocks = GetImageSize()/TPB + 1;
 		cout << blocks <<" kernel blocks used\n";
 		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
 		cout << extraMem <<" extra mem per block used\n";
+			//bind texture
+		uchar1DTextRef.normalized = false;
+		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
+		uchar1DTextRef.filterMode = cudaFilterModePoint;
+
+		cudaChannelFormatDesc channelDesc = 
+			cudaCreateChannelDesc(8, 0, 0, 0, cudaChannelFormatKindUnsigned);;
+
+		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize());
+		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		
 			QueryPerformanceCounter(&start);
 
@@ -31,7 +42,8 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		cudaThreadSynchronize();
 			QueryPerformanceCounter(&stop);
 
-			cout << "GpuErode ticks: " << stop.QuadPart-start.QuadPart << '\n';
+			cout << "GpuErode ticks: " << 
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "microseconds\n";
 		
 		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		return 1;
@@ -54,7 +66,8 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 
 			QueryPerformanceCounter(&stop);
 
-			cout << "CPUErode ticks: " << stop.QuadPart-start.QuadPart << '\n';
+			cout << "CPUErode ticks: " << 
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "microseconds\n";
 		return 1;
 	}
 }

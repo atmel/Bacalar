@@ -1,6 +1,8 @@
 #ifndef CUDA_VARS
 #define CUDA_VARS
 
+#include <cuda.h>
+
 #define MAX_SE 100
 
 //SEs
@@ -13,6 +15,8 @@ __constant__ unsigned gpuImageDim, gpuImageDimensions[3], gpuFrameSize;
 __constant__ unsigned gpuImageLineSize, gpuImageSliceSize, gpuImageTotalPixelSize;	//inluding frame
 __constant__ unsigned gpuImageWidth, gpuImageSliceArea, gpuImageSize;				//without frame
 
-//__shared__ unsigned* nb;	//for nb fast usage
+//textures
+
+texture<unsigned char> uchar1DTextRef;
 
 #endif
