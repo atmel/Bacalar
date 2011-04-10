@@ -48,7 +48,7 @@ public:
 	FilterList<imDataType>();
 
 	string name;							//for subFilters
-	int lenght;
+	int length;
 	float (Filter<imDataType>::**pf)(imDataType*, int, imDataType*, fourthParam<imDataType>);
 	imDataType **dst, **src;
 	int *SE;

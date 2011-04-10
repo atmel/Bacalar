@@ -4,7 +4,7 @@
 template <typename imDataType> 
 FilterList<imDataType>::FilterList(){
 	
-	lenght = 0;
+	length = 0;
 	name.clear();
 }
 

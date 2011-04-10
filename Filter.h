@@ -57,7 +57,8 @@ class Filter : private ImageInfo, private CudaInfo{
 	inline imDataType Max(imDataType x, imDataType y)
 		{return x<y?y:x;}
 
-public:static bool QsortOpt(imDataType *base, unsigned initBaseLenght = 0); 
+public:static bool QsortOpt(imDataType *base, unsigned initBaseLength = 0); 
+	   static imDataType MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
 
 public:
 
