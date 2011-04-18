@@ -38,8 +38,11 @@ using namespace std;
 typedef struct _structEl{
 	string name;
 	unsigned *nb;
+	unsigned *nbPitched2D;				//for aligned GPU arrays
+	unsigned pitch2D;					//for aligned GPU arrays
 	unsigned nbSize;
 	float *mask;
+	float *origInput;					//for parsing to aligned GPU arrays
 } structEl;
 
 
@@ -60,6 +63,7 @@ public:
 	structEl *GetSE(int index);
 	bool DeleteAll();							//SE refresh - SEs still have to be parsed, so merging is worthless 
 	int Parse2SE(string *name, float *mask);	//float mask[dictsize]
+	int ReParse2PitchedSE(unsigned idx, unsigned pitch);
 	bool SendToGpu();
 
 

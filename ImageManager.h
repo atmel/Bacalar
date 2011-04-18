@@ -34,6 +34,8 @@
 #include <map>
 using namespace std;
 
+typedef enum {onCPU, onGPU} enumWhere;
+
 class ImageInfo{							//abstract class
 
 	static unsigned imageDim, imageDimensions[3], frameSize;
@@ -73,7 +75,7 @@ public:vector<imDataType*> image;						//array of images
 
 public:
 	static ImageManager<imDataType>* Create();
-	int PrepareBlankImage(bool gpu, int index =-1);					//creates empty image for filter result
+	int PrepareBlankImage(enumWhere wh, int index =-1);					//creates empty image for filter result
 
 	int Load3D(const char* fname, int frameSize = -1);	//curently with zero-framing
 	int LoadBMP(const char* fname, int frameSize = -1);

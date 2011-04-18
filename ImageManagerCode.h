@@ -113,7 +113,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 	ComputeMetrics();				//compute derivated metrics and save them in parrent class
 
 	cout << "File "<< name << " opened\n";
-	PrepareBlankImage(false);		//initialize image vectors
+	PrepareBlankImage(onCPU);		//initialize image vectors
 
 	raw = new unsigned char[GetDimensions(0)*GetDimensions(1)*GetDimensions(2)];
 	inFile2.read((char*)raw,GetDimensions(0)*GetDimensions(1)*GetDimensions(2));
@@ -143,7 +143,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 	if(UseCuda()){				//GPU part
 		cout << "Sending image to GPU\n";
 		SendToGpu();			//send metrics to gpu
-		PrepareBlankImage(true,curIm);
+		PrepareBlankImage(onGPU,curIm);
 		cudaMemcpy(gpuImage[curIm],image[curIm],sizeof(imDataType)*GetTotalPixelSize(),cudaMemcpyHostToDevice);
 		cout << "LoadBMP cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}
@@ -205,7 +205,7 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 
 	//move image from GPU if needed
 	if(UseCuda()){
-		PrepareBlankImage(false,idx);
+		PrepareBlankImage(onCPU,idx);
 		cudaMemcpy(image[idx],gpuImage[idx],sizeof(imDataType)*GetTotalPixelSize(),cudaMemcpyDeviceToHost);
 		cout << "SaveBMP cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}
@@ -307,7 +307,7 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 	does not check UseCuda flag
 */
 template <typename imDataType>
-int ImageManager<imDataType>::PrepareBlankImage(bool gpu, int index){
+int ImageManager<imDataType>::PrepareBlankImage(enumWhere wh, int index){
 	
 	int idx;
 	//add new image
@@ -319,7 +319,7 @@ int ImageManager<imDataType>::PrepareBlankImage(bool gpu, int index){
 		idx = index;
 	}
 
-	if(gpu){
+	if(wh == onGPU){
 		if(gpuImage[idx] == NULL) cudaMalloc(&gpuImage[idx],sizeof(imDataType)*GetTotalPixelSize());
 		cout << "Prepade blank1 cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		cudaMemset((void*)gpuImage[idx],0,sizeof(imDataType)*GetTotalPixelSize());

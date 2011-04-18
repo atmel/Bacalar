@@ -94,8 +94,11 @@ int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 
 	se[justAdded]->nbSize = nonZero;
 	se[justAdded]->mask = new float[nonZero];
+	se[justAdded]->origInput = new float[dictSize];
 	se[justAdded]->nb = new unsigned[nonZero];
 	se[justAdded]->name = *name;
+
+	for(int i=0; i < dictSize;i++) se[justAdded]->origInput[i] = mask[i];
 
 	//fill SE mask - only used pixels
 	nonZero = 0;		//as count variable

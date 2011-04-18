@@ -25,7 +25,8 @@ __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
 	if(thread >= gpuImageSize) return;				//terminate excessive threads
 	unsigned arrIdx = (gpuFrameSize + thread/gpuImageSliceArea)*gpuImageSliceSize;
 	thread = thread % gpuImageSliceArea;
-	arrIdx += (gpuFrameSize + thread/gpuImageWidth)*gpuImageLineSize + (gpuFrameSize + thread%gpuImageWidth);
+	arrIdx += (gpuFrameSize + thread/gpuImageWidth)*gpuImageLineSize 
+			+ (gpuFrameSize + thread%gpuImageWidth);
 
 		//erode (find min)
 	imDataType _min = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
@@ -37,5 +38,9 @@ __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
 	dst[arrIdx] = _min;
 }
 
+template<typename imDataType>
+__global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
+
+}
 
 #endif

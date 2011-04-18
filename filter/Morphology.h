@@ -12,7 +12,7 @@
 #include "Bacalar/Filter.h"
 #include <windows.h>
 
-#define TPB (512)
+#define TPB (128)
 
 
 template <typename imDataType>
@@ -43,7 +43,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 			QueryPerformanceCounter(&stop);
 
 			cout << "GpuErode ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "microseconds\n";
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
 		
 		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		return 1;
@@ -67,7 +67,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 			QueryPerformanceCounter(&stop);
 
 			cout << "CPUErode ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "microseconds\n";
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
 		return 1;
 	}
 }
