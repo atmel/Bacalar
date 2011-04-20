@@ -31,7 +31,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		uchar1DTextRef.filterMode = cudaFilterModePoint;
 
 		cudaChannelFormatDesc channelDesc = 
-			cudaCreateChannelDesc(8, 0, 0, 0, cudaChannelFormatKindUnsigned);;
+			cudaCreateChannelDesc<imDataType>();//(8, 0, 0, 0, cudaChannelFormatKindUnsigned);;
 
 		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize());
 		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
