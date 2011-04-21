@@ -85,6 +85,8 @@ __global__ void GPUerode(imDataType* dst, int seIndex, imDataType* srcA){
 /*
 	Currently only unsigned char
 */
+#define SORT_ARR_SIZE (gpuNbSize[seIndex]/2+2)
+
 template<typename imDataType>
 __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
@@ -99,7 +101,7 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//attach array for partial sorting
 	unsigned char *sortArr = dynArray + gpuNbSize[seIndex]*sizeof(unsigned) 
-							+ (gpuNbSize[seIndex]/2 + 2)*threadIdx.x;
+							+ SORT_ARR_SIZE*threadIdx.x;
 
 			//compute actual index to image array
 	thread = threadIdx.x + blockIdx.x*blockDim.x;	//proper usage as global thread ID
@@ -107,10 +109,46 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 	if(thread >= gpuImageSize) return;				//terminate excessive threads
 	unsigned arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
 
-			//fill/initialize array for partial sorting
-	imDataType *_min, *_max;
-	for(thread = 0;thread<(gpuNbSize[seIndex]/2 + 2); thread++){
-		
+			//fill/initialize array for partial sorting, find min, max consequently
+	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
+	imDataType *_min = sortArr, *_max = sortArr, tmp;	//init min,max
+
+	for(thread = 1;thread<SORT_ARR_SIZE; thread++){
+		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+		if(sortArr[thread] > *_max) _max = &sortArr[thread];
+		if(sortArr[thread] < *_min) _min = &sortArr[thread];
+	}
+			//forgetful sort (loop begins with knowing min, max position)
+			//mins are deleted from the [0], maxs from [last] 
+	for(int i = 0;;){
+			//forget min
+		tmp = sortArr[SORT_ARR_SIZE-1-i];	//in case _min points to the end
+		*_min = sortArr[0];
+			//forget max
+		*_max = tmp;
+
+			//end?
+		if(gpuNbSize[seIndex]%2){			//to spare one/two elements respectively
+			if(SORT_ARR_SIZE-i <= 3){		//odd	
+				dst[arrIdx] = sortArr[1];	//position of the median
+				return;
+			}
+		}else{
+			if(SORT_ARR_SIZE-i <= 4){		//even	
+				dst[arrIdx] = ((unsigned)sortArr[1]+sortArr[2])/2;
+				return;
+			}
+		}
+			//move new unsorted to [0] -- array shrinks from top
+		sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[SORT_ARR_SIZE-1+i]);
+			
+			//find new min and max
+		_min = sortArr; _max = sortArr;
+		i++;
+		for(thread = 1;thread<SORT_ARR_SIZE-i; thread++){
+			if(sortArr[thread] > *_max) _max = &sortArr[thread];
+			if(sortArr[thread] < *_min) _min = &sortArr[thread];
+		}
 	}
 }
 

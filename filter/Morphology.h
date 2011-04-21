@@ -14,7 +14,6 @@
 
 #define TPB (128)
 
-
 template <typename imDataType>
 float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
 	LARGE_INTEGER frq, start, stop;
@@ -30,10 +29,9 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
 		uchar1DTextRef.filterMode = cudaFilterModePoint;
 
-		cudaChannelFormatDesc channelDesc = 
-			cudaCreateChannelDesc<imDataType>();//(8, 0, 0, 0, cudaChannelFormatKindUnsigned);;
+		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<imDataType>();
 
-		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize());
+		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize()*sizeof(imDataType));
 		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		
 			QueryPerformanceCounter(&start);
