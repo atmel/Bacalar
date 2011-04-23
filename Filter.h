@@ -59,6 +59,7 @@ class Filter : private ImageInfo, private CudaInfo{
 
 public:static bool QsortOpt(imDataType *base, unsigned initBaseLength = 0); 
 	   static imDataType MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
+	   static imDataType Forgetful(imDataType *sortArr, unsigned initBaseLength);
 
 public:
 

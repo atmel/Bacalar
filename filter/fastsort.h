@@ -98,7 +98,7 @@ START:
 	}
 	return true;
 }
-
+//------------------------------------------------------------------------------------------------------
 /*
 
 	This function performs partial sorting, resulting in median being in the right place
@@ -180,6 +180,71 @@ START:
 		}
 	}
 	return true;
+}
+
+template<typename imDataType>
+imDataType Filter<imDataType>::Forgetful(imDataType *sortArr, unsigned initBaseLength){
+
+	cout << "new\n";
+	unsigned arSize = (initBaseLength/2+2),thread;
+
+	imDataType *_min = sortArr, *_max = sortArr;					//init min,max (indexes to sortArr)
+	for(unsigned i=0;i<initBaseLength;i++){
+		cout << (unsigned)sortArr[i] << " ";
+	}
+	cout << "\n";
+
+	for(thread = 1;thread<arSize; thread++){
+		//sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+		if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
+		if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
+	}
+			//forgetful sort (loop begins with knowing min, max position)
+			//mins are deleted from the [0], maxs from [last] 
+	for(unsigned i = 0;;){
+			//forget min, max
+		cout << "min: " << (unsigned)*_min << " max: " << (unsigned)*_max << '\n';
+		if(_min == &sortArr[arSize-1-i]){		//min on max's position
+			*_max = sortArr[0];
+			cout << "minswap \n";
+		}else if(_max == &sortArr[0]){				//max on min's position
+			cout << "maxswap\n";
+			*_min = sortArr[arSize-1-i];
+		}else{										//both condiotions or normal state
+			cout << "normal\n";
+			*_min = sortArr[0];
+			*_max = sortArr[arSize-1-i];
+		}
+		for(unsigned j=0;i<arSize-j;j++){
+			cout << (unsigned)sortArr[j] << " ";
+		}
+		cout << "\n";
+
+			//end?
+		if(initBaseLength%2){			//to spare one/two elements respectively
+			if(arSize-i <= 3){		//odd	
+				//dst[arrIdx] = sortArr[1];	//position of the median
+				return 0;
+			}
+		}else{
+			if(arSize-i <= 4){		//even	
+				//dst[arrIdx] = ((unsigned)sortArr[1]+sortArr[2])/2;
+				return 0;
+			}
+		}
+			//move new unsorted to [0] -- array shrinks from top
+		sortArr[0] = sortArr[arSize+i];
+			
+			//find new min and max
+		_min = sortArr; _max = sortArr;
+		i++;
+		for(thread = 1;thread<arSize-i; thread++){
+			if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
+			if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
+		}
+	}
+	
+	return 0;
 }
 
 #endif

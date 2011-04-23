@@ -35,7 +35,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		
 			QueryPerformanceCounter(&start);
-
+			
 		GPUerode<imDataType><<<blocks,TPB,extraMem>>>(dst,seIndex,srcA);
 		cudaThreadSynchronize();
 			QueryPerformanceCounter(&stop);

@@ -6,6 +6,7 @@
 #include "Bacalar/Filter.h"
 
 #define THREAD_PER_BLOCK_MED (128)
+#define ADD_MEM_SIZE_PER_BLOCK ((((sem->GetSE(seIndex)->nbSize)/2+2)/4+1)*sizeof(unsigned))
 
 template <typename imDataType>
 float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
@@ -18,8 +19,10 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		unsigned blocks = GetImageSize()/THREAD_PER_BLOCK_MED + 1;
 		cout << blocks <<" kernel blocks used\n";
 		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned)
-							+ THREAD_PER_BLOCK_MED*((sem->GetSE(seIndex)->nbSize)/2+2);
+				+ THREAD_PER_BLOCK_MED*ADD_MEM_SIZE_PER_BLOCK;
 		cout << extraMem <<" extra mem per block used\n";
+		cout << "ADD_MEM_SIZE_PER_BLOCK: " << ADD_MEM_SIZE_PER_BLOCK <<'\n';
+		cout << "arr size: " << ((sem->GetSE(seIndex)->nbSize)/2+2) <<'\n';
 			//bind texture
 		uchar1DTextRef.normalized = false;
 		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
@@ -58,6 +61,7 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 			for(unsigned m=1;m < se->nbSize; m++){
 				values[m] = srcA[pos + se->nb[m]];
 			}
+			//Filter<imDataType>::Forgetful(values, se->nbSize);
 			Filter<imDataType>::MedianFindOpt(values);
 			if(se->nbSize%2){							//odd
 				dst[pos] = values[se->nbSize/2];
