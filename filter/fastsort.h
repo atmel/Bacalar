@@ -58,7 +58,6 @@ START:
 			}
 			//step back to previous level or end
 			if(curStep == 0) break;						//this is the only end
-
 			curStep--;
 			continue;									//we cannot be sure if previous is not also too short
 		}
@@ -243,8 +242,6 @@ imDataType Filter<imDataType>::Forgetful(imDataType *sortArr, unsigned initBaseL
 			if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
 		}
 	}
-	
-	return 0;
 }
 
 #endif

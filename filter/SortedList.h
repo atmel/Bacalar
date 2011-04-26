@@ -15,14 +15,14 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 
 
 	if(UseCuda()){
-		cout << "median on GPU\n";
+		//cout << "median on GPU\n";
 		unsigned blocks = GetImageSize()/THREAD_PER_BLOCK_MED + 1;
-		cout << blocks <<" kernel blocks used\n";
+		//cout << blocks <<" kernel blocks used\n";
 		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned)
 				+ THREAD_PER_BLOCK_MED*ADD_MEM_SIZE_PER_BLOCK;
-		cout << extraMem <<" extra mem per block used\n";
+		/*cout << extraMem <<" extra mem per block used\n";
 		cout << "ADD_MEM_SIZE_PER_BLOCK: " << ADD_MEM_SIZE_PER_BLOCK <<'\n';
-		cout << "arr size: " << ((sem->GetSE(seIndex)->nbSize)/2+2) <<'\n';
+		cout << "arr size: " << ((sem->GetSE(seIndex)->nbSize)/2+2) <<'\n';*/
 			//bind texture
 		uchar1DTextRef.normalized = false;
 		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
@@ -31,7 +31,7 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<imDataType>();
 
 		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize()*sizeof(imDataType));
-		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		//cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		
 			QueryPerformanceCounter(&start);
 
@@ -39,17 +39,18 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		cudaThreadSynchronize();
 			QueryPerformanceCounter(&stop);
 
-			cout << "GpuMedian ticks: " << 
+		/*	cout << "GpuMedian ticks: " << 
 				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
 		
-		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		return 1;
+		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';*/
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
-		imDataType *values;
+		imDataType *values, *values1;
 		structEl *se = sem->GetSE(seIndex);
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		values = new imDataType[se->nbSize];
+		values1 = new imDataType[se->nbSize];
 		Filter<imDataType>::QsortOpt(NULL,se->nbSize);			//initialize qsort
 		Filter<imDataType>::MedianFindOpt(NULL,se->nbSize);		//initialize median
 		unsigned long pos;
@@ -57,25 +58,37 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		//3D
 			QueryPerformanceCounter(&start);
 
-		BEGIN_FOR3D(pos)		
-			for(unsigned m=1;m < se->nbSize; m++){
-				values[m] = srcA[pos + se->nb[m]];
+		BEGIN_FOR3D(pos)	
+			//cout << "---------------------------\n";
+			for(unsigned m=0;m < se->nbSize; m++){
+				values[m] = values1[m] = srcA[pos + se->nb[m]];
+			//	cout << (unsigned)values[m] << " ";
 			}
+			//cout << '\n';
+			
+
 			//Filter<imDataType>::Forgetful(values, se->nbSize);
 			Filter<imDataType>::MedianFindOpt(values);
 			if(se->nbSize%2){							//odd
 				dst[pos] = values[se->nbSize/2];
+				/*if(values[se->nbSize/2] != values1[1]){
+					for(unsigned m=1;m < se->nbSize; m++){
+						cout << (unsigned)values[m] << " ";
+					}
+					cout << '\n';
+					system("pause");
+				}*/
 			}else{
-				dst[pos] = (values[se->nbSize/2-1]+values[se->nbSize/2])/2;
+				dst[pos] = ((unsigned)values[se->nbSize/2-1]+values[se->nbSize/2])/2;
 			}
 		END_FOR3D;
 
 			QueryPerformanceCounter(&stop);
 
-			cout << "CpuMedian ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
+			/*cout << "CpuMedian ticks: " << 
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";*/
 
-		return 1;
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 	}
 }
 

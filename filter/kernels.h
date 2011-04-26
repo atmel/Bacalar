@@ -21,6 +21,33 @@
 	arrIdx += (gpuFrameSize + incVar/gpuImageWidth)*gpuImageLineSize\
 			+ (gpuFrameSize + incVar%gpuImageWidth)
 
+
+/*
+
+	DEVICE FUNCTIONS
+
+*/
+
+__device__ unsigned MapThreadOntoImageArray(){
+	unsigned thread = threadIdx.x + blockIdx.x*blockDim.x;
+
+	if(thread >= gpuImageSize) return 0;
+	unsigned arrIdx = (gpuFrameSize + thread/gpuImageSliceArea)*gpuImageSliceSize;
+	
+	thread = thread % gpuImageSliceArea;
+	arrIdx += (gpuFrameSize + thread/gpuImageWidth)*gpuImageLineSize
+			+ (gpuFrameSize + thread%gpuImageWidth);
+	return arrIdx;
+}
+
+__device__ void CopySEToShared(int seIndex, unsigned *nb){
+	for(unsigned incVar = 0;gpuNbSize[seIndex] > incVar*blockDim.x; incVar++){
+		if(threadIdx.x + blockDim.x*incVar < gpuNbSize[seIndex]){	/*copy only contents of nb array*/
+			nb[threadIdx.x + blockDim.x*incVar] = gpuNb[seIndex][threadIdx.x + blockDim.x*incVar];
+		}
+	}
+}
+
 /*
 	KERNELS
 */
@@ -64,28 +91,25 @@ template<typename imDataType>
 __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned dynArray[];
-	unsigned *nb = dynArray;						//points to per block allocated shared memory
+	extern __shared__ unsigned nb[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 
 			//will run multiple times only if nbsize > number of threads
 	SE_TO_SHARED(thread);
 	__syncthreads();
 
-			//attach array for partial sorting
-	unsigned char *sortArr = 
-		(unsigned char*)&dynArray[gpuNbSize[seIndex]+INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
-
 			//compute actual index to image array
-	thread = threadIdx.x + blockIdx.x*blockDim.x;	//proper usage as global thread ID
-	
+	thread = threadIdx.x + blockIdx.x*blockDim.x;	//proper usage as global thread ID	
 	if(thread >= gpuImageSize) return;				//terminate excessive threads
 	unsigned arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
 
-			//fill/initialize array for partial sorting, find min, max consequently
+		//attach array for partial sorting
+	unsigned char *sortArr = 
+		(unsigned char*)&nb[gpuNbSize[seIndex]+INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
+
+		//fill/initialize array for partial sorting, find min, max consequently
 	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
 	imDataType *_min = sortArr, *_max = sortArr;					//init min,max (indexes to sortArr)
-	//imDataType tmp;
 
 	for(thread = 1;thread<SORT_ARR_SIZE; thread++){
 		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
