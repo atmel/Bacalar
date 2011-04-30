@@ -100,7 +100,8 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//compute actual index to image array
 	thread = threadIdx.x + blockIdx.x*blockDim.x;	//proper usage as global thread ID	
-	if(thread >= gpuImageSize) return;				//terminate excessive threads
+	if(thread >= gpuImageSize) return;				//terminate excessive threads	
+
 	unsigned arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
 
 		//attach array for partial sorting
@@ -119,15 +120,10 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 			//forgetful sort (loop begins with knowing min, max position)
 			//mins are deleted from the [0], maxs from [last] 
 	for(int i = 0;;){
-			//forget min, max
-		if(_min == &(sortArr[SORT_ARR_SIZE-1-i])){		//min on max's position
-			*_max = sortArr[0];
-		}else if(_max == &(sortArr[0])){				//max on min's position
-			*_min = sortArr[SORT_ARR_SIZE-1-i];
-		}else{										//both condiotions or normal state
-			*_min = sortArr[0];
-			*_max = sortArr[SORT_ARR_SIZE-1-i];
-		}
+			//accomplishing both conditions yelding less div branches (max on min's position...)
+		*_min = (_max == &(sortArr[0]))?sortArr[SORT_ARR_SIZE-1-i]:sortArr[0];
+		*_max = (_min == &(sortArr[SORT_ARR_SIZE-1-i]))?sortArr[0]:sortArr[SORT_ARR_SIZE-1-i];
+
 			//end?
 		if(gpuNbSize[seIndex]%2){			//to spare one/two elements respectively
 			if(SORT_ARR_SIZE-i <= 3){		//odd	

@@ -9,6 +9,8 @@
 	As nontemplate class, function definitions and static variable definitions goes here
 
 	Setter functions include error check against loading multiple images with different dimmensions
+
+	Maintains corresponding variables on GPU
 */
 	//without frame
 

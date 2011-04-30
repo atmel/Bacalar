@@ -39,10 +39,6 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		cudaThreadSynchronize();
 			QueryPerformanceCounter(&stop);
 
-		/*	cout << "GpuMedian ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
-		
-		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';*/
 		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
@@ -59,34 +55,19 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 			QueryPerformanceCounter(&start);
 
 		BEGIN_FOR3D(pos)	
-			//cout << "---------------------------\n";
 			for(unsigned m=0;m < se->nbSize; m++){
 				values[m] = values1[m] = srcA[pos + se->nb[m]];
-			//	cout << (unsigned)values[m] << " ";
-			}
-			//cout << '\n';
-			
+			}		
 
-			//Filter<imDataType>::Forgetful(values, se->nbSize);
 			Filter<imDataType>::MedianFindOpt(values);
 			if(se->nbSize%2){							//odd
 				dst[pos] = values[se->nbSize/2];
-				/*if(values[se->nbSize/2] != values1[1]){
-					for(unsigned m=1;m < se->nbSize; m++){
-						cout << (unsigned)values[m] << " ";
-					}
-					cout << '\n';
-					system("pause");
-				}*/
 			}else{
 				dst[pos] = ((unsigned)values[se->nbSize/2-1]+values[se->nbSize/2])/2;
 			}
 		END_FOR3D;
 
 			QueryPerformanceCounter(&stop);
-
-			/*cout << "CpuMedian ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";*/
 
 		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 	}

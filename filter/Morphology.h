@@ -19,11 +19,11 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 	LARGE_INTEGER frq, start, stop;
 	QueryPerformanceFrequency(&frq);
 	if(UseCuda()){
-		cout << "eroding on GPU\n";
+		//cout << "eroding on GPU\n";
 		unsigned blocks = GetImageSize()/TPB + 1;
-		cout << blocks <<" kernel blocks used\n";
+		//cout << blocks <<" kernel blocks used\n";
 		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
-		cout << extraMem <<" extra mem per block used\n";
+		//cout << extraMem <<" extra mem per block used\n";
 			//bind texture
 		uchar1DTextRef.normalized = false;
 		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
@@ -32,7 +32,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<imDataType>();
 
 		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize()*sizeof(imDataType));
-		cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		//cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		
 			QueryPerformanceCounter(&start);
 			
@@ -40,11 +40,11 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		cudaThreadSynchronize();
 			QueryPerformanceCounter(&stop);
 
-			cout << "GpuErode ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
+		//	cout << "GpuErode ticks: " << 
+		//		(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
 		
-		cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		return 1;
+		//cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 	}else{
 		imDataType min;
 		structEl *se = sem->GetSE(seIndex);
@@ -64,9 +64,9 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 
 			QueryPerformanceCounter(&stop);
 
-			cout << "CPUErode ticks: " << 
-				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
-		return 1;
+			/*cout << "CPUErode ticks: " << 
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";*/
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 	}
 }
 
