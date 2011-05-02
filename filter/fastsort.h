@@ -23,7 +23,7 @@
 
 	This function performs partial sorting, resulting in median being in the right place
 	It is actually modified quicksort, where branches not containing median are not sorted.
-	Sorting ends, when (lengh/2)th and (lengh/2 + 1)th elements are in the right place, so 
+	Sorting ends when (lengh/2)th and (lengh/2 + 1)th elements are in the right place, so 
 	median for odd or even length can be calculated
 
 */

@@ -73,4 +73,10 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 	}
 }
 
+
+template <typename imDataType>
+float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+	return 1;
+}
+
 #endif

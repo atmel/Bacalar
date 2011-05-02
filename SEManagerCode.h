@@ -123,11 +123,16 @@ structEl* SEManager<imDataType>::GetSE(int index){
 template<typename imDataType>
 bool SEManager<imDataType>::SendToGpu(){
 	
-	unsigned sizes[MAX_SE];
+	unsigned sizes[MAX_SE], medSizes[MAX_SE], BESSizes[MAX_SE];
 	for(unsigned i=0;i<se.size();i++){
 		sizes[i] = se[i]->nbSize;
+			//compute filter additionals
+		medSizes[i] = sizes[i]/2+2;
+		BESSizes[i] = (3*sizes[i])/4+2;
 	}
 	cudaMemcpyToSymbol(gpuNbSize, sizes, sizeof(unsigned)*se.size());
+	cudaMemcpyToSymbol(gpuMedianSortArrSize, medSizes, sizeof(unsigned)*se.size());
+	cudaMemcpyToSymbol(gpuBESSortArrSize, BESSizes, sizeof(unsigned)*se.size());
 	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	unsigned *nbs[MAX_SE];
 	float *masks[MAX_SE];
