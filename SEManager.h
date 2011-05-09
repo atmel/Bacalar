@@ -38,8 +38,8 @@ using namespace std;
 typedef struct _structEl{
 	string name;
 	unsigned *nb;
-	unsigned *nbPitched2D;				//for aligned GPU arrays
-	unsigned pitch2D;					//for aligned GPU arrays
+	//unsigned *nbPitched2D;				//for aligned GPU arrays
+	//unsigned pitch2D;					//for aligned GPU arrays
 	unsigned nbSize;
 	float *mask;
 	float *origInput;					//for parsing to aligned GPU arrays

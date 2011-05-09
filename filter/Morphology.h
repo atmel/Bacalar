@@ -100,4 +100,64 @@ float Filter<imDataType>::Close (imDataType* dst, int seIndex, imDataType* srcA,
 	return 1; 
 }
 
+#define EDGE_TPB (128)
+template <typename imDataType>
+float Filter<imDataType>::Edge(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+	LARGE_INTEGER frq, start, stop;
+	QueryPerformanceFrequency(&frq);
+	if(UseCuda()){
+		//cout << "eroding on GPU\n";
+		unsigned blocks = GetImageSize()/TPB + 1;
+		//cout << blocks <<" kernel blocks used\n";
+		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
+		//cout << extraMem <<" extra mem per block used\n";
+			//bind texture
+		uchar1DTextRef.normalized = false;
+		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
+		uchar1DTextRef.filterMode = cudaFilterModePoint;
+
+		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<imDataType>();
+
+		cudaBindTexture(0,&uchar1DTextRef,(void*)srcA,&channelDesc,GetTotalPixelSize()*sizeof(imDataType));
+		//cout << "binding texture cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		
+			QueryPerformanceCounter(&start);
+			
+		GPUedge<imDataType><<<blocks,EDGE_TPB,extraMem>>>(dst,seIndex,srcA);
+		cudaThreadSynchronize();
+			QueryPerformanceCounter(&stop);
+
+		//	cout << "GpuErode ticks: " << 
+		//		(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";
+		
+		//cout << "erode cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
+	}else{
+		imDataType min, max, tmp;
+		structEl *se = sem->GetSE(seIndex);
+		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
+		unsigned long pos;
+
+			QueryPerformanceCounter(&start);
+		//3D
+		BEGIN_FOR3D(pos)			
+			min = max = srcA[pos + se->nb[0]];		//find minimum
+			for(unsigned m=1;m < se->nbSize; m++){
+				tmp = srcA[pos + se->nb[m]];
+				if(min > tmp)
+					min = tmp;
+				if(max < tmp)
+					max = tmp;
+			}
+			dst[pos] = max-min;
+		END_FOR3D;
+
+			QueryPerformanceCounter(&stop);
+
+			/*cout << "CPUErode ticks: " << 
+				(double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart << "miliseconds\n";*/
+		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
+	}
+}
+
 #endif

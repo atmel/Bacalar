@@ -1,0 +1,4 @@
+In-CODE changes, that sould not be included in final version
+------------------------------------------------------------
+
+In AsubB: multiplying by 10 included for debuging purposes
