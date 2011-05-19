@@ -6,7 +6,7 @@
 #include "Bacalar/Filter.h"
 
 #define THREAD_PER_BLOCK_MED (192)		//13 registers best occupancy estimate
-#define ADD_MEM_SIZE_PER_BLOCK ((((sem->GetSE(seIndex)->nbSize)/2+2)/4+1)*sizeof(unsigned))
+#define ADD_MEM_SIZE_PER_BLOCK (((((sem->GetSE(seIndex)->nbSize)/2+2)*sizeof(imDataType))/4+1)*sizeof(unsigned))
 
 template <typename imDataType>
 float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
@@ -42,12 +42,10 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
-		imDataType *values, *values1;
+		imDataType *values;
 		structEl *se = sem->GetSE(seIndex);
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		values = new imDataType[se->nbSize];
-		values1 = new imDataType[se->nbSize];
-		Filter<imDataType>::QsortOpt(NULL,se->nbSize);			//initialize qsort
 		Filter<imDataType>::MedianFindOpt(NULL,se->nbSize);		//initialize median
 		unsigned long pos;
 
@@ -56,7 +54,7 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 
 		BEGIN_FOR3D(pos)	
 			for(unsigned m=0;m < se->nbSize; m++){
-				values[m] = values1[m] = srcA[pos + se->nb[m]];
+				values[m] = srcA[pos + se->nb[m]];
 			}		
 
 			Filter<imDataType>::MedianFindOpt(values);
@@ -74,7 +72,7 @@ float Filter<imDataType>::Median(imDataType* dst, int seIndex, imDataType* srcA,
 }
 
 #define BES_THREAD_PER_BLOCK (192)
-#define BES_ADD_MEM_SIZE_PER_BLOCK ((((3*sem->GetSE(seIndex)->nbSize)/4+2)/4+1)*sizeof(unsigned))
+#define BES_ADD_MEM_SIZE_PER_BLOCK (((((3*sem->GetSE(seIndex)->nbSize)/4+2)*sizeof(imDataType))/4+1)*sizeof(unsigned))
 
 template <typename imDataType>
 float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){

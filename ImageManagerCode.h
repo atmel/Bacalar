@@ -132,7 +132,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 				}else if(typeid(imDataType) == typeid(unsigned int)){
 					image[curIm][k+(j*dims[0])+(i*dims[1]*dims[0])] = raw[l]*256;
 				}else if(typeid(imDataType) == typeid(float)){
-					image[curIm][k+(j*dims[0])+(i*dims[1]*dims[0])] = raw[l]/256.0;
+					image[curIm][k+(j*dims[0])+(i*dims[1]*dims[0])] = (unsigned char)(raw[l]/256.0);
 				}
 				l++;
 			}
@@ -234,7 +234,7 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 			}else if(typeid(imDataType) == typeid(unsigned int)){
 				imageData[i+bitmapSize[0]*(bitmapSize[1]-1-j)] = value/256;
 			}else if(typeid(imDataType) == typeid(float)){
-				imageData[i+bitmapSize[0]*(bitmapSize[1]-1-j)] = value*256.0;
+				imageData[i+bitmapSize[0]*(bitmapSize[1]-1-j)] = (unsigned char)(value*256.0);
 			}
 		}
 	}

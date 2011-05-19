@@ -106,6 +106,9 @@ pos=lnAndSl+col;
 
 
 #include "Bacalar/filter/kernels.h"
+#include "Bacalar/filter/kernels/kerMorph.h"
+#include "Bacalar/filter/kernels/kerSorted.h"
+#include "Bacalar/filter/kernels/kerWalsh.h"
 #include "Bacalar/filter/InitandAlgebra.h"
 #include "Bacalar/filter/Morphology.h"
 #include "Bacalar/filter/SortedList.h"
