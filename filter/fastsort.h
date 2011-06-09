@@ -12,8 +12,6 @@
 		- fixed-length stacks (allocated only once per filter function call 
 			through optional parameter)
 
-		-
-
 */
 
 #define SWAP(X,Y) swap=base[(X)];base[(X)]=base[(Y)];base[(Y)]=swap

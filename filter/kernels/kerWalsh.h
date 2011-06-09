@@ -53,12 +53,13 @@
 #define INT32_ALIGNED_HODGES_SORT_ARR_SIZE \
 	(((HODGES_SORT_ARR_SIZE+4)*sizeof(imDataType))/4+1)
 	//array index is approprietally set for each subgroup
-#define WALSH_NB_TO_SHARED_PARALELL(incVar)\
-	for(incVar = 0;gpuNbSize[seIndex] > incVar*THREADS_PER_PIXEL; incVar++){\
+#define WALSH_NB_TO_SHARED_PARALELL(incVar,tmpVar)\
+	for(incVar = 0,tmpVar = threadIdx.x%THREADS_PER_PIXEL;\
+	 gpuNbSize[seIndex] > incVar;\
+	 incVar += THREADS_PER_PIXEL, tmpVar += THREADS_PER_PIXEL){\
 			/*do not write behind sortArr*/\
-		if(threadIdx.x%THREADS_PER_PIXEL + THREADS_PER_PIXEL*incVar >= gpuNbSize[seIndex]) break;\
-		sortArr[threadIdx.x%THREADS_PER_PIXEL + THREADS_PER_PIXEL*incVar]=\
-		tex1Dfetch(uchar1DTextRef,arrIdx + nb[threadIdx.x%THREADS_PER_PIXEL + THREADS_PER_PIXEL*incVar]);\
+		if(tmpVar >= gpuNbSize[seIndex]) break;\
+		sortArr[tmpVar]=tex1Dfetch(uchar1DTextRef,arrIdx + nb[tmpVar]);\
 	}
 
 /*
@@ -67,6 +68,10 @@
 		pixels with index 0-THREADS_PER_PIXEL will process 1st pixel and so on. Block will
 		process a total of (blockDim/THREADS_PER_PIXEL)*blockDim pixels, which helps to hide latencies
 		as memory request can be covered by computation
+
+	Synchronization: if group of threads should be mapped onto pixel out of image, it does nothing but synchonize
+		instead. If it is the case, value of 'thread' never changes and no new variable is needed
+TODO> check if thread can exceed the 
 
 
 */
@@ -97,56 +102,73 @@ __global__ void GPUhodgesmedOpt(imDataType* dst, int seIndex, imDataType* srcA){
 		thread = i + blockIdx.x*blockDim.x + threadIdx.x/THREADS_PER_PIXEL;
 		if(thread < gpuImageSize){						//WHAT THE SHIT?!?
 			arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
-			WALSH_NB_TO_SHARED_PARALELL(thread);
+			WALSH_NB_TO_SHARED_PARALELL(thread, bigger);
+				//arrIdx not used until storage of the result -> use it as dummy variable
 		}
 		__syncthreads();
 			//generate Walsh list
+		//if(thread < gpuImageSize){
+		//for(thread = 0; HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread*THREADS_PER_PIXEL; thread++){
+		//		//store averages behind nbpixel values
+		//	if((threadIdx.x%THREADS_PER_PIXEL)+THREADS_PER_PIXEL*thread >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;
+		//	sortArr[(threadIdx.x % THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread + gpuNbSize[seIndex]] =
+		//		((unsigned)sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)+1]]
+		//		+sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)]])/2;
+		//}
+		//}
 		if(thread < gpuImageSize){
-		for(thread = 0; HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread*THREADS_PER_PIXEL; thread++){
-				//store averages behind nbpixel values
-			if((threadIdx.x%THREADS_PER_PIXEL)+THREADS_PER_PIXEL*thread >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;
-			sortArr[(threadIdx.x % THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread + gpuNbSize[seIndex]] =
-				((unsigned)sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)+1]]
-				+sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)]])/2;
-		}
+			for(thread = 0, arrIdx = threadIdx.x%THREADS_PER_PIXEL; 
+			 HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread; 
+			 thread += THREADS_PER_PIXEL, arrIdx += THREADS_PER_PIXEL){
+					//store averages behind nbpixel values
+				if(arrIdx >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;
+				sortArr[arrIdx + gpuNbSize[seIndex]] =
+					((unsigned)sortArr[walshIdxArr[2*(arrIdx)+1]]
+					+sortArr[walshIdxArr[2*(arrIdx)]])/2;
+			}
+			thread = 0; //to ensure that condition works
 		}
 SYNC1:
 		__syncthreads();
 			//find median
+			//use arridx as dummy instead, thread is reserved for overflow handling
 		sortArr[HODGES_SORT_ARR_SIZE+2] = sortArr[HODGES_SORT_ARR_SIZE+3] = 0;	//control variables
-		for(thread = 0; HODGES_SORT_ARR_SIZE > thread*THREADS_PER_PIXEL; thread++){	//if array is longer than blockDim
-			if(thread < gpuImageSize){
-				//terminate excessive threads
-			if((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread >= HODGES_SORT_ARR_SIZE) goto SYNC2; 
-			if(sortArr[HODGES_SORT_ARR_SIZE+2]&&sortArr[HODGES_SORT_ARR_SIZE+2]) goto SYNC2; //both medians found, end
-			imDataType curElement = sortArr[(threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread];
+		for(arrIdx = 0; HODGES_SORT_ARR_SIZE > arrIdx; arrIdx+=THREADS_PER_PIXEL){	//if array is longer than blockDim
+			if(thread < gpuImageSize){		//if 
+					//terminate excessive threads
+				thread = (threadIdx.x%THREADS_PER_PIXEL) + arrIdx;
+				if(thread >= HODGES_SORT_ARR_SIZE) goto SYNC2; 
+				if(sortArr[HODGES_SORT_ARR_SIZE+2]&&sortArr[HODGES_SORT_ARR_SIZE+2]) goto SYNC2; //both medians found, end
+				imDataType curElement = sortArr[thread];
 
-				//compare
-			bigger = lesser = 0;
-			for(arrIdx=0;arrIdx<HODGES_SORT_ARR_SIZE;arrIdx++){	//arrIdx as temporary
-				bigger += (sortArr[arrIdx] > curElement);		//faster, no branching
-				lesser += (sortArr[arrIdx] < curElement);
-			}
-			if(!((lesser>HODGES_SORT_ARR_SIZE/2)||(bigger>HODGES_SORT_ARR_SIZE/2))){
-				if((lesser<=HODGES_SORT_ARR_SIZE/2-1+ODD)&&(bigger<=HODGES_SORT_ARR_SIZE/2)){
-					sortArr[HODGES_SORT_ARR_SIZE  ] = curElement;
-					sortArr[HODGES_SORT_ARR_SIZE+2] = 1;
+					//compare
+				bigger = lesser = 0;
+				for(thread=0;thread<HODGES_SORT_ARR_SIZE;thread++){	//thread as temporary
+					bigger += (sortArr[thread] > curElement);		//faster, no branching
+					lesser += (sortArr[thread] < curElement);
 				}
-				if((lesser<=HODGES_SORT_ARR_SIZE/2)&&(bigger<=HODGES_SORT_ARR_SIZE/2-1+ODD)){ 
-					sortArr[HODGES_SORT_ARR_SIZE+1] = curElement;
-					sortArr[HODGES_SORT_ARR_SIZE+3] = 1;
+				if(!((lesser>HODGES_SORT_ARR_SIZE/2)||(bigger>HODGES_SORT_ARR_SIZE/2))){
+					if((lesser<=HODGES_SORT_ARR_SIZE/2-1+ODD)&&(bigger<=HODGES_SORT_ARR_SIZE/2)){
+						sortArr[HODGES_SORT_ARR_SIZE  ] = curElement;
+						sortArr[HODGES_SORT_ARR_SIZE+2] = 1;
+					}
+					if((lesser<=HODGES_SORT_ARR_SIZE/2)&&(bigger<=HODGES_SORT_ARR_SIZE/2-1+ODD)){ 
+						sortArr[HODGES_SORT_ARR_SIZE+1] = curElement;
+						sortArr[HODGES_SORT_ARR_SIZE+3] = 1;
+					}
 				}
-			}
+				thread = 0;	//to ensure that condition works
 			}
 SYNC2:
 			__syncthreads();
 		}
 		if(thread < gpuImageSize){
-		if((threadIdx.x%THREADS_PER_PIXEL) == 0){
-			thread = i + blockIdx.x*blockDim.x + threadIdx.x/THREADS_PER_PIXEL;
-			arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
-			dst[arrIdx] = ((unsigned)sortArr[HODGES_SORT_ARR_SIZE]+sortArr[HODGES_SORT_ARR_SIZE+1])/2;
-		}
+			if((threadIdx.x%THREADS_PER_PIXEL) == 0){
+				thread = i + blockIdx.x*blockDim.x + threadIdx.x/THREADS_PER_PIXEL;
+				arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
+				dst[arrIdx] = ((unsigned)sortArr[HODGES_SORT_ARR_SIZE]+sortArr[HODGES_SORT_ARR_SIZE+1])/2;
+			}
+			thread = 0; //to ensure that condition works
 		}
 		__syncthreads();
 	}

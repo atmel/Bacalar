@@ -1,6 +1,10 @@
 #pragma once
 #include "Bacalar/FilterManager.h"
 
+/*
+	--NOT COMLPETE--
+*/
+
 template <typename imDataType> 
 FilterList<imDataType>::FilterList(){
 	
@@ -9,7 +13,7 @@ FilterList<imDataType>::FilterList(){
 }
 
 
-//--------------------------------FilterManager
+//--------------------------------FilterManager----------------------------
 template<typename imDataType>
 bool FilterManager<imDataType>::singletonFlag = 0;
 

@@ -27,7 +27,9 @@ ImageManager<imDataType>::ImageManager(){
 	Load3D loads .hdr/.img image under next free index.
 	- if loading multiple images, they must be the same size
 
-TODO: CUDA
+	is responsible for initializing all metrics and ImageInfo and
+	sending everything regarding image to GPU if UseCuda set
+
 */
 #include <iostream>
 template <typename imDataType>
@@ -85,7 +87,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 	}
 	cout << "Dimensions: " << GetDimensions(0) << ' ' << GetDimensions(1) << ' ' << GetDimensions(2) << '\n';
 
-	if(!success) return BAD_SUBIMAGE_DIMENSIONS;					//second image has different dimension(s)
+	if(!success) return BAD_SUBIMAGE_DIMENSIONS;			//second image has different dimension(s)
 
 	if(bitPix != 8) return BAD_IMAGE_FORMAT;				//8-bit unsigned char only
 
@@ -110,7 +112,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 
 	if(!inFile2.is_open()) return NO_SUCH_FILE;
 
-	ComputeMetrics();				//compute derivated metrics and save them in parrent class
+	ComputeMetrics();				//compute derivated metrics and save them in parrent class	<=====
 
 	cout << "File "<< name << " opened\n";
 	PrepareBlankImage(onCPU);		//initialize image vectors
@@ -136,7 +138,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 				}
 				l++;
 			}
-	//image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255;
+	//image[curIm][frame+(frame*dims[0])+(frame*dims[1]*dims[0])] = 255; // DEBUG
 
 	cout << "Data read\n";
 
@@ -144,6 +146,7 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 		cout << "Sending image to GPU\n";
 		SendToGpu();			//send metrics to gpu
 		PrepareBlankImage(onGPU,curIm);
+			//send imamge data to GPU
 		cudaMemcpy(gpuImage[curIm],image[curIm],sizeof(imDataType)*GetTotalPixelSize(),cudaMemcpyHostToDevice);
 		cout << "LoadBMP cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}
@@ -162,9 +165,9 @@ int ImageManager<imDataType>::LoadBMP(const char* fname, int frameSize){
 	Saves image pointed by idx as 2D .bmp, no matter it was 2D or 3D
 
 	Slicing direction is index of dimension, which will transform to the number of slices.
-	I.e. 20x30x40 image saved with slicingDir 1 will consist of 30 20x40 planar images.
+	I.e. 20x30x40 image saved with slicingDir 1 will consist of 30 20x40 planar images
 
-	//dim[0] is fastest running
+	dim[0] is fastest running
 */
 template <typename imDataType>
 int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir, int sliPerLine){
@@ -240,7 +243,7 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 	}
 	cout << "Data rearanged\n";
 
-	//save greyscale bmp
+	//save greyscale bmp -- head
 
 	unsigned char *toSave, *palette, uselessChar[16], head[2] = {'B','M'};
 	unsigned short int paddingBytes, uniInt;
@@ -280,7 +283,7 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 	fwrite(&uniLong,4,1,outFile);	
 	fwrite(uselessChar,4,1,outFile);									//Stuff
 
-	//Save indexed greyscale image
+	//Save indexed greyscale image -- palette, data
 	palette = (unsigned char*)malloc(256*4);							//Create color palette
 	for(i=0; i<256; i++){
 		palette[4*i] = palette[4*i +1] = palette[4*i +2] = i;
@@ -302,8 +305,12 @@ int ImageManager<imDataType>::SaveBmp(int idx, const char* fname, int slicingDir
 
 /*	
 	Creates blank image in RAM or in GPU RAM, image is added behind last image
+	
+	if index is not -1, blank image is created from NULL pointer in image vector<>
+	under desired index. If there already is an image, nothing happens
 
 	image vector<> entries are added for both GPU and CPU but one stays NULL
+
 	does not check UseCuda flag
 */
 template <typename imDataType>

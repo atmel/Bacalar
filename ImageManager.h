@@ -3,7 +3,7 @@
 #include "Bacalar/cuda/CudaInfo.h"
 /*
 
-	File topology:
+	Datafile topology:
 	
 	.............Dim 0 (fastest).......
 	.............--->..................
@@ -20,8 +20,8 @@
 	......+--------+...................
 	........./.........................
 	......../..........................
-	......|/..Eyes face this way.......
-	...................................
+	......|/..Eyes of the brain sample.
+	..........image face this way......
 
 	0,0,0 pixel corresponds to bottom left pixel of transformed 2D image
 	(it is actually printed upside down as data are read from 0,0,0 -> top left)
@@ -68,18 +68,18 @@ template <typename imDataType>
 class ImageManager : private ImageInfo, private CudaInfo
 {
 	static bool singletonFlag;
-public:vector<imDataType*> image;						//array of images
+public:vector<imDataType*> image;									//array of images
 	   vector<imDataType*> gpuImage;
 	
 	ImageManager();
 
 public:
 	static ImageManager<imDataType>* Create();
-	int PrepareBlankImage(enumWhere wh, int index =-1);					//creates empty image for filter result
+	int PrepareBlankImage(enumWhere wh, int index =-1);				//creates empty image for filter result
 
-	int Load3D(const char* fname, int frameSize = -1);	//curently with zero-framing
+	int Load3D(const char* fname, int frameSize = -1);				//curently with zero-framing
 	int LoadBMP(const char* fname, int frameSize = -1);
-	int SaveBmp(int idx, const char* fname, int slicingDir=-1, int sliPerLine=-1); //defaults: saving 2D image
+	int SaveBmp(int idx, const char* fname, int slicingDir=-1, int sliPerLine=-1);	//defaults: saving 2D image
 
 
 };

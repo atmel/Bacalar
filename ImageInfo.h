@@ -12,8 +12,6 @@
 
 	Maintains corresponding variables on GPU
 */
-	//without frame
-
 
 unsigned ImageInfo::imageDim = 0;
 unsigned ImageInfo::imageDimensions[3] = {0,0,0};
@@ -73,10 +71,10 @@ bool ImageInfo::SendToGpu(){
 	cout << "ImageInfo,send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	cudaMemcpyToSymbol(gpuImageSize, &imageSize, sizeof(unsigned));
 	cout << "ImageInfo,send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-	unsigned size;
+	/*unsigned size;
 	cudaMemcpyFromSymbol(&size,gpuImageSize,sizeof(unsigned));
 	cout << "ImageInfo,send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-	cout << "ImageInfo,size: " << size << '\n';
+	cout << "ImageInfo,size: " << size << '\n';*/
 
 	return true;
 }

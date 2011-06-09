@@ -10,6 +10,7 @@ bool SEManager<imDataType>::singletonFlag = 0;
 /*
 	Create function handles singleton policy
 */
+
 template<typename imDataType>
 SEManager<imDataType>* SEManager<imDataType>::Create()
 {
@@ -49,12 +50,6 @@ SEManager<imDataType>::SEManager(){
 	
 	se.clear();
 
-	/*for(int i=0; i< mSize; i++){
-		for(int j=0; j< mSize*mSize; j++){
-			cout << dictionary[j + i*mSize*mSize] << " ";
-		}
-		cout << "\n\n";
-	}*/
 	singletonFlag = 1;
 }
 
@@ -73,14 +68,12 @@ SEManager<imDataType>::SEManager(){
 
 	Mask topology is explained in SEManager.h. For clarification,
 	'a' is in the top left corner of top layer, 's' 'corresponds'
-	to 0,0,0 coordinates.
-
+	to 0,0,0 coordinates -- see ImageManager.h.
 
 */
 template<typename imDataType>
 int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 	
-	//structEl dummy;
 	int justAdded;
 	int nonZero = 0;
 
@@ -101,7 +94,7 @@ int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 	for(int i=0; i < dictSize;i++) se[justAdded]->origInput[i] = mask[i];
 
 	//fill SE mask - only used pixels
-	nonZero = 0;		//as count variable
+	nonZero = 0;		//as temporary count variable
 	for(int i=0; i < dictSize;i++){		
 		if(mask[i] != 0.0){
 			se[justAdded]->mask[nonZero] = mask[i];
@@ -127,7 +120,7 @@ bool SEManager<imDataType>::SendToGpu(){
 	for(unsigned i=0;i<se.size();i++){
 		sizes[i] = se[i]->nbSize;
 			//compute filter additionals
-		//medSizes[i] = sizes[i]/2+2;
+		//medSizes[i] = sizes[i]/2+2;			//it's faster to do that on GPU
 		//BESSizes[i] = (3*sizes[i])/4+2;
 	}
 	cudaMemcpyToSymbol(gpuNbSize, sizes, sizeof(unsigned)*se.size());

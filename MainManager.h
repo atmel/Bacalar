@@ -6,6 +6,11 @@
 /*
 	Main definition file - include only this in main
 
+	otherwise --NOT COMPLETE--
+
+	In future should be responsible for lifecycle of program - loading (re)config files, partially parsing them,
+	launching filters and optionally communicating with graphic framework
+
 */
 
 #include "Bacalar/structures.h"

@@ -7,8 +7,10 @@
 #include "Bacalar/Filter.h"
 
 /*
+	--NOT COMPLETE--
 
-	
+	In future it should parse (now unspecified) text input into filterlists, that can be used to 
+	instantly launch filters with desired parameters
 
 */
 
@@ -47,8 +49,8 @@ class FilterList{
 public:
 	FilterList<imDataType>();
 
-	string name;							//for subFilters
-	int length;
+	string name;						//for subFilters
+	int length;							//lenght of the list
 	float (Filter<imDataType>::**pf)(imDataType*, int, imDataType*, fourthParam<imDataType>);
 	imDataType **dst, **src;
 	int *SE;
