@@ -86,18 +86,18 @@ int SEManager<imDataType>::Parse2SE(string *name, float *mask){
 	}
 
 	se[justAdded]->nbSize = nonZero;
-	se[justAdded]->mask = new float[nonZero];
-	se[justAdded]->origInput = new float[dictSize];
+	se[justAdded]->weight = new float[nonZero];
+	//se[justAdded]->origInput = new float[dictSize];
 	se[justAdded]->nb = new unsigned[nonZero];
 	se[justAdded]->name = *name;
 
-	for(int i=0; i < dictSize;i++) se[justAdded]->origInput[i] = mask[i];
+	//for(int i=0; i < dictSize;i++) se[justAdded]->origInput[i] = mask[i];
 
 	//fill SE mask - only used pixels
 	nonZero = 0;		//as temporary count variable
 	for(int i=0; i < dictSize;i++){		
 		if(mask[i] != 0.0){
-			se[justAdded]->mask[nonZero] = mask[i];
+			se[justAdded]->weight[nonZero] = mask[i];
 			se[justAdded]->nb[nonZero] = dictionary[i];
 			nonZero++;
 		}
@@ -136,7 +136,7 @@ bool SEManager<imDataType>::SendToGpu(){
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 		cudaMalloc(&(masks[i]),sizeof(float)*se[i]->nbSize);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		cudaMemcpy((void*)(masks[i]),se[i]->mask,sizeof(float)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cudaMemcpy((void*)(masks[i]),se[i]->weight,sizeof(float)*se[i]->nbSize,cudaMemcpyHostToDevice);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}
 	cudaMemcpyToSymbol(gpuNb, nbs, sizeof(unsigned*)*se.size());

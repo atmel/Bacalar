@@ -155,10 +155,10 @@ int ImageManager<imDataType>::Load3D(const char* fname, int frameSize){				//wit
 }
 
 
-template <typename imDataType>
-int ImageManager<imDataType>::LoadBMP(const char* fname, int frameSize){
-	return 0;
-}
+//template <typename imDataType>
+//int ImageManager<imDataType>::LoadBMP(const char* fname, int frameSize){
+//	return 0;
+//}
 
 
 /*

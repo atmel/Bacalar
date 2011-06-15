@@ -41,8 +41,8 @@ class ImageInfo{							//abstract class
 	static unsigned imageDim, imageDimensions[3], frameSize;
 
 	//image metrics
-	static unsigned imageLineSize, imageSliceSize, imageTotalPixelSize;
-	static unsigned imageWidth, imageSliceArea, imageSize;		
+	static unsigned imageLineSize, imageSliceSize, imageTotalPixelSize;	//including frame
+	static unsigned imageWidth, imageSliceArea, imageSize;				//without frame
 
 public:
 	bool SetDim(int d);						//sets image dimensionality (2-3)
@@ -78,7 +78,7 @@ public:
 	int PrepareBlankImage(enumWhere wh, int index =-1);				//creates empty image for filter result
 
 	int Load3D(const char* fname, int frameSize = -1);				//curently with zero-framing
-	int LoadBMP(const char* fname, int frameSize = -1);
+	//int LoadBMP(const char* fname, int frameSize = -1);
 	int SaveBmp(int idx, const char* fname, int slicingDir=-1, int sliPerLine=-1);	//defaults: saving 2D image
 
 

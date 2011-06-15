@@ -39,8 +39,8 @@ typedef struct _structEl{
 	string name;
 	unsigned *nb;
 	unsigned nbSize;
-	float *mask;
-	float *origInput;					//for parsing to aligned GPU arrays, not used currently
+	float *weight;
+	//float *origInput;					//for parsing to aligned GPU arrays, not used currently
 } structEl;
 
 
