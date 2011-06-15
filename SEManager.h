@@ -7,12 +7,12 @@ using namespace std;
 
 /*
 	StructEl holds necessary information about used structure element
-	- structEl.mask contains weights of nb pixels and is ignored in morphological 
+	- structEl.mask contains weights of wList pixels and is ignored in morphological 
 		filters, so they stay fast despite StructEl.mask beeing float
-	- nb[] contains only pre-computed pointer differences from cental pixel. Therefore 
+	- wList[] contains only pre-computed pointer differences from cental pixel. Therefore 
 		use it as follows:
-			a = image[x + wihth*(y + z*height) + nb[i]]
-		where [x,y,z] is processed (central) pixel, 'i' is in range [0-nbSize] and 'image'
+			a = image[x + wihth*(y + z*height) + wList[i]]
+		where [x,y,z] is processed (central) pixel, 'i' is in range [0-capacity] and 'image'
 		is pointer to the image
 	- mask orientation towards image (2D uses only one layer)
 
@@ -37,10 +37,9 @@ using namespace std;
 
 typedef struct _structEl{
 	string name;
-	unsigned *nb;
-	unsigned nbSize;
-	float *weight;
-	//float *origInput;					//for parsing to aligned GPU arrays, not used currently
+	int *wList;
+	unsigned capacity;
+	unsigned *mask;						//original input for later use (not used now)
 } structEl;
 
 
@@ -49,8 +48,8 @@ template <typename imDataType>
 class SEManager : private ImageInfo{
 
 	static bool singletonFlag;
-	int *dictionary;					//contains all pointer differences
-	int dictSize;
+	int *dictionary;					//contains all pointer differences (entire neighbourhood)
+	unsigned dictSize;
 	vector<structEl*> se;
 	SEManager();
 
@@ -60,7 +59,7 @@ public:
 	int GetSEIndex(string *name);
 	structEl *GetSE(int index);
 	bool DeleteAll();							//SE refresh - SEs still have to be parsed, so merging is worthless 
-	int Parse2SE(string *name, float *mask);	//float mask[dictsize]
+	int Parse2SE(string *name, unsigned *mask);	//float mask[dictsize]
 	//int ReParse2PitchedSE(unsigned idx, unsigned pitch);
 	bool SendToGpu();
 

@@ -22,7 +22,7 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 		//cout << "eroding on GPU\n";
 		unsigned blocks = GetImageSize()/TPB + 1;
 		//cout << blocks <<" kernel blocks used\n";
-		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
+		unsigned extraMem = (sem->GetSE(seIndex)->capacity)*sizeof(unsigned);
 		//cout << extraMem <<" extra mem per block used\n";
 			//bind texture
 		uchar1DTextRef.normalized = false;
@@ -54,10 +54,10 @@ float Filter<imDataType>::Erode(imDataType* dst, int seIndex, imDataType* srcA, 
 			QueryPerformanceCounter(&start);
 		//3D
 		BEGIN_FOR3D(pos)			
-			min = srcA[pos + se->nb[0]];		//find minimum
-			for(unsigned m=1;m < se->nbSize; m++){
-				if(min > srcA[pos + se->nb[m]])
-					min = srcA[pos + se->nb[m]];
+			min = srcA[pos + se->wList[0]];		//find minimum
+			for(unsigned m=1;m < se->capacity; m++){
+				if(min > srcA[pos + se->wList[m]])
+					min = srcA[pos + se->wList[m]];
 			}
 			dst[pos] = min;
 		END_FOR3D;
@@ -80,10 +80,10 @@ float Filter<imDataType>::Dilatate(imDataType* dst, int seIndex, imDataType* src
 
 	//3D
 	BEGIN_FOR3D(pos)			
-		max = srcA[pos + se->nb[0]];		//find minimum
-		for(unsigned m=1;m < se->nbSize; m++){
-			if(max < srcA[pos + se->nb[m]])
-				max = srcA[pos + se->nb[m]];
+		max = srcA[pos + se->wList[0]];		//find minimum
+		for(unsigned m=1;m < se->capacity; m++){
+			if(max < srcA[pos + se->wList[m]])
+				max = srcA[pos + se->wList[m]];
 		}
 		dst[pos] = max;
 	END_FOR3D;
@@ -109,7 +109,7 @@ float Filter<imDataType>::Edge(imDataType* dst, int seIndex, imDataType* srcA, f
 		//cout << "eroding on GPU\n";
 		unsigned blocks = GetImageSize()/TPB + 1;
 		//cout << blocks <<" kernel blocks used\n";
-		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned);
+		unsigned extraMem = (sem->GetSE(seIndex)->capacity)*sizeof(unsigned);
 		//cout << extraMem <<" extra mem per block used\n";
 			//bind texture
 		uchar1DTextRef.normalized = false;
@@ -141,9 +141,9 @@ float Filter<imDataType>::Edge(imDataType* dst, int seIndex, imDataType* srcA, f
 			QueryPerformanceCounter(&start);
 		//3D
 		BEGIN_FOR3D(pos)			
-			min = max = srcA[pos + se->nb[0]];		//find minimum
-			for(unsigned m=1;m < se->nbSize; m++){
-				tmp = srcA[pos + se->nb[m]];
+			min = max = srcA[pos + se->wList[0]];		//find minimum
+			for(unsigned m=1;m < se->capacity; m++){
+				tmp = srcA[pos + se->wList[m]];
 				if(min > tmp)
 					min = tmp;
 				if(max < tmp)

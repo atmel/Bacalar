@@ -109,7 +109,7 @@ imDataType Filter<imDataType>::Forgetful(imDataType *sortArr, unsigned initBaseL
 	cout << "\n";
 
 	for(thread = 1;thread<arSize; thread++){
-		//sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+		//sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[thread]);
 		if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
 		if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
 	}

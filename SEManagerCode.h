@@ -64,7 +64,7 @@ SEManager<imDataType>::SEManager(){
 
 	a b c j k l s t u d e f ... 
 
-	Pixels with mask value 0 will not be contained in final nb
+	Pixels with mask value 0 will not be contained in final wList
 
 	Mask topology is explained in SEManager.h. For clarification,
 	'a' is in the top left corner of top layer, 's' 'corresponds'
@@ -72,38 +72,38 @@ SEManager<imDataType>::SEManager(){
 
 */
 template<typename imDataType>
-int SEManager<imDataType>::Parse2SE(string *name, float *mask){
+int SEManager<imDataType>::Parse2SE(string *name, unsigned *mask){
 	
 	int justAdded;
-	int nonZero = 0;
 
 	se.push_back(new structEl);
 	justAdded = se.size() - 1;
 	
-	//check number of non-zero elements in mask (parsed to line of floats)
-	for(int i=0; i < dictSize;i++){
-		if(mask[i] != 0.0) nonZero++;
+	//compute capacity of mask and copy the mask
+	se[justAdded]->capacity = 0;
+	se[justAdded]->mask = new unsigned[dictSize];
+	for(unsigned i=0; i < dictSize;i++){
+		se[justAdded]->capacity += mask[i];
+		se[justAdded]->mask[i] = mask[i];
 	}
 
-	se[justAdded]->nbSize = nonZero;
-	se[justAdded]->weight = new float[nonZero];
-	//se[justAdded]->origInput = new float[dictSize];
-	se[justAdded]->nb = new unsigned[nonZero];
+	se[justAdded]->wList = new int[se[justAdded]->capacity];
 	se[justAdded]->name = *name;
 
-	//for(int i=0; i < dictSize;i++) se[justAdded]->origInput[i] = mask[i];
-
-	//fill SE mask - only used pixels
-	nonZero = 0;		//as temporary count variable
-	for(int i=0; i < dictSize;i++){		
-		if(mask[i] != 0.0){
-			se[justAdded]->weight[nonZero] = mask[i];
-			se[justAdded]->nb[nonZero] = dictionary[i];
-			nonZero++;
+	//fill wList - voxels with weight 0 will not be included
+	int idx=0;
+	for(unsigned i=0; i < dictSize;i++){		
+		for(unsigned j=0;j < mask[i];j++){
+			se[justAdded]->wList[idx] = dictionary[i];
+			idx++;
 		}
 	}
-	cout << "SE size: " << se[justAdded]->nbSize << '\n';
-	return se[justAdded]->nbSize;
+
+	for(unsigned i =0;i<se[justAdded]->capacity;i++){
+		cout << (signed int)se[justAdded]->wList[i] << " ";
+	}
+	cout << "\nSE size: " << se[justAdded]->capacity << '\n';
+	return se[justAdded]->capacity;
 }
 
 
@@ -116,32 +116,32 @@ structEl* SEManager<imDataType>::GetSE(int index){
 template<typename imDataType>
 bool SEManager<imDataType>::SendToGpu(){
 	
-	unsigned sizes[MAX_SE];//, medSizes[MAX_SE], BESSizes[MAX_SE];
+	unsigned capacities[MAX_SE];//, medSizes[MAX_SE], BESSizes[MAX_SE];
 	for(unsigned i=0;i<se.size();i++){
-		sizes[i] = se[i]->nbSize;
+		capacities[i] = se[i]->capacity;
 			//compute filter additionals
-		//medSizes[i] = sizes[i]/2+2;			//it's faster to do that on GPU
-		//BESSizes[i] = (3*sizes[i])/4+2;
+		//medSizes[i] = capacities[i]/2+2;			//it's faster to do that on GPU
+		//BESSizes[i] = (3*capacities[i])/4+2;
 	}
-	cudaMemcpyToSymbol(gpuNbSize, sizes, sizeof(unsigned)*se.size());
+	cudaMemcpyToSymbol(gpuCap, capacities, sizeof(unsigned)*se.size());
 	//cudaMemcpyToSymbol(gpuMedianSortArrSize, medSizes, sizeof(unsigned)*se.size());
 	//cudaMemcpyToSymbol(gpuBESSortArrSize, BESSizes, sizeof(unsigned)*se.size());
 	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-	unsigned *nbs[MAX_SE];
-	float *masks[MAX_SE];
+	unsigned *wLists[MAX_SE];
+	//float *masks[MAX_SE];
 	for(unsigned i=0;i<se.size();i++){
-		cudaMalloc(&(nbs[i]),sizeof(unsigned)*se[i]->nbSize);
+		cudaMalloc(&(wLists[i]),sizeof(unsigned)*se[i]->capacity);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		cudaMemcpy((void*)(nbs[i]),se[i]->nb,sizeof(unsigned)*se[i]->nbSize,cudaMemcpyHostToDevice);
+		cudaMemcpy((void*)(wLists[i]),se[i]->wList,sizeof(unsigned)*se[i]->capacity,cudaMemcpyHostToDevice);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		cudaMalloc(&(masks[i]),sizeof(float)*se[i]->nbSize);
+//		cudaMalloc(&(masks[i]),sizeof(float)*se[i]->capacity);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-		cudaMemcpy((void*)(masks[i]),se[i]->weight,sizeof(float)*se[i]->nbSize,cudaMemcpyHostToDevice);
+//		cudaMemcpy((void*)(masks[i]),se[i]->weight,sizeof(float)*se[i]->capacity,cudaMemcpyHostToDevice);
 		//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	}
-	cudaMemcpyToSymbol(gpuNb, nbs, sizeof(unsigned*)*se.size());
+	cudaMemcpyToSymbol(gpuWeightedList, wLists, sizeof(unsigned*)*se.size());
 	//cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
-	cudaMemcpyToSymbol(gpuMask, masks, sizeof(float*)*se.size());
+//	cudaMemcpyToSymbol(gpuMask, masks, sizeof(float*)*se.size());
 	cout << "SEManager, send cuda error:" << cudaGetErrorString(cudaGetLastError()) << '\n';
 	return true;
 }

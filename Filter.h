@@ -45,7 +45,9 @@ class Filter : private ImageInfo, private CudaInfo{
 		{return x<y?y:x;}
 
 public:static bool QsortOpt(imDataType *base, unsigned initBaseLength = 0); 
-	   static imDataType MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
+	   static bool MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
+	   static void FindKth(imDataType *base, unsigned &first, unsigned &last, unsigned k);
+	   static bool UniBESFind(imDataType *base, unsigned initBaseLength = 0);
 	   static imDataType Forgetful(imDataType *sortArr, unsigned initBaseLength);
 
 public:
@@ -60,15 +62,15 @@ public:
 	//morphology
 	static float Erode (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//er(A)
 	static float Dilatate (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//dil(A)
-	static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//op(A)
-	static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//
-	static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//A-
+	//static float Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//op(A)
+	//static float Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//
+	//static float WTH (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);		//A-
 	static float Edge (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);	//er(A)
 	//sorted list filters - use mask
 	static float Median (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
 	static float WMedian (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
-	static float KthQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
-	static float KSubJQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	//static float KthQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
+	//static float KSubJQuantil (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
 	static float BES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
 	static float WBES (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4);
 

@@ -10,9 +10,9 @@
 */
 
 #define SE_TO_SHARED(incVar)\
-	for(incVar = 0;gpuNbSize[seIndex] > incVar*blockDim.x; incVar++){\
-	if(threadIdx.x + blockDim.x*incVar < gpuNbSize[seIndex]){	/*copy only contents of nb array*/\
-		nb[threadIdx.x + blockDim.x*incVar] = gpuNb[seIndex][threadIdx.x + blockDim.x*incVar];\
+	for(incVar = 0;gpuCap[seIndex] > incVar*blockDim.x; incVar++){\
+	if(threadIdx.x + blockDim.x*incVar < gpuCap[seIndex]){	/*copy only contents of wList array*/\
+		wList[threadIdx.x + blockDim.x*incVar] = gpuWeightedList[seIndex][threadIdx.x + blockDim.x*incVar];\
 	}}
 
 #define MAP_THREADS_ONTO_IMAGE(incVar)\
@@ -32,14 +32,14 @@
 /*
 	Currently only unsigned char
 */
-#define SORT_ARR_SIZE (gpuNbSize[seIndex]/2+2)
+#define SORT_ARR_SIZE (gpuCap[seIndex]/2+2)
 #define INT32_ALIGNED_SORT_ARR_SIZE ((SORT_ARR_SIZE*sizeof(imDataType))/4+1)
 
 template<typename imDataType>
 __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned nb[];
+	extern __shared__ unsigned wList[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 
 			//will run multiple times only if nbsize > number of threads
@@ -54,14 +54,14 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 
 		//attach array for partial sorting
 	imDataType *sortArr = 
-		(imDataType*)&nb[gpuNbSize[seIndex]+INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
+		(imDataType*)&wList[gpuCap[seIndex]+INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
 
 		//fill/initialize array for partial sorting, find min, max consequently
-	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
+	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[0]);
 	imDataType *_min = sortArr, *_max = sortArr;					//init min,max (indexes to sortArr)
 
 	for(thread = 1;thread<SORT_ARR_SIZE; thread++){
-		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[thread]);
 		if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
 		if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
 	}
@@ -73,7 +73,7 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 		*_max = (_min == &(sortArr[SORT_ARR_SIZE-1-i]))?sortArr[0]:sortArr[SORT_ARR_SIZE-1-i];
 
 			//end?
-		if(gpuNbSize[seIndex]%2){			//to spare one/two elements respectively
+		if(gpuCap[seIndex]%2){			//to spare one/two elements respectively
 			if(SORT_ARR_SIZE-i <= 3){		//odd	
 				dst[arrIdx] = sortArr[1];	//position of the median
 				return;
@@ -85,7 +85,7 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 			}
 		}
 			//move new unsorted to [0] -- array shrinks from top
-		sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[SORT_ARR_SIZE+i]);
+		sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[SORT_ARR_SIZE+i]);
 			
 			//find new min and max
 		_min = sortArr; _max = sortArr;
@@ -102,7 +102,7 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 #undef SORT_ARR_SIZE
 #undef INT32_ALIGNED_SORT_ARR_SIZE
 
-#define BES_SORT_ARR_SIZE ((3*gpuNbSize[seIndex])/4+2)
+#define BES_SORT_ARR_SIZE ((3*gpuCap[seIndex])/4+2)
 #define BES_INT32_ALIGNED_SORT_ARR_SIZE ((BES_SORT_ARR_SIZE*sizeof(imDataType))/4+1)
 
 /*
@@ -110,7 +110,7 @@ __global__ void GPUmedian(imDataType* dst, int seIndex, imDataType* srcA){
 	BES = ceil(n/4) + floor((n+1)/2) + ceil((n+1)/2) + floor((3n+4)/4)
 
 	At the begining act as forgerful (shared still suffices) and
-	find 1,4-quartil, than continue as forgetful, but do not load
+	find 1,3-quartil, than continue as forgetful, but do not load
 	additional value from memory
 
 */
@@ -118,7 +118,7 @@ template<typename imDataType>
 __global__ void GPUBES(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned nb[];
+	extern __shared__ unsigned wList[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 			//will run multiple times only if nbsize > number of threads
 	SE_TO_SHARED(thread);
@@ -130,13 +130,13 @@ __global__ void GPUBES(imDataType* dst, int seIndex, imDataType* srcA){
 	unsigned arrIdx = MAP_THREADS_ONTO_IMAGE(thread);
 		//attach array for partial sorting
 	imDataType *sortArr = 
-		(imDataType*)&nb[gpuNbSize[seIndex]+BES_INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
+		(imDataType*)&wList[gpuCap[seIndex]+BES_INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
 		//fill/initialize array for partial sorting, find min, max consequently
-	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
+	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[0]);
 
 	imDataType *_min = sortArr, *_max = sortArr;					//init min,max (indexes to sortArr)
 	for(thread = 1;thread<BES_SORT_ARR_SIZE; thread++){
-		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[thread]);
 		if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
 		if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
 	}
@@ -149,10 +149,10 @@ __global__ void GPUBES(imDataType* dst, int seIndex, imDataType* srcA){
 		*_max = (_min == &(sortArr[BES_SORT_ARR_SIZE-1-i]))?sortArr[0]:sortArr[BES_SORT_ARR_SIZE-1-i];
 
 			//end? (no unsorted element to include?)
-		if(BES_SORT_ARR_SIZE+i == gpuNbSize[seIndex]) break;
+		if(BES_SORT_ARR_SIZE+i == gpuCap[seIndex]) break;
 
 			//move new unsorted to [0] -- array shrinks from top
-		sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[BES_SORT_ARR_SIZE+i]);
+		sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[BES_SORT_ARR_SIZE+i]);
 			
 			//find new min and max
 		_min = sortArr; _max = sortArr;
@@ -181,7 +181,7 @@ __global__ void GPUBES(imDataType* dst, int seIndex, imDataType* srcA){
 		*_max = (_min == &(sortArr[BES_SORT_ARR_SIZE-1-i]))?sortArr[0]:sortArr[BES_SORT_ARR_SIZE-1-i];
 
 			//end?
-		if(gpuNbSize[seIndex]%2){			//to spare one/two elements respectively
+		if(gpuCap[seIndex]%2){			//to spare one/two elements respectively
 			if(BES_SORT_ARR_SIZE-i <= 3){		//odd	
 				dst[arrIdx] = ((unsigned)sortArr[BES_SORT_ARR_SIZE-1] +
 					sortArr[BES_SORT_ARR_SIZE-2] + 2*sortArr[1])/4;	//position of the median

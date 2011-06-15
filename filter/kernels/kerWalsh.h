@@ -10,9 +10,9 @@
 */
 
 #define SE_TO_SHARED(incVar)\
-	for(incVar = 0;gpuNbSize[seIndex] > incVar*blockDim.x; incVar++){\
-	if(threadIdx.x + blockDim.x*incVar < gpuNbSize[seIndex]){	/*copy only contents of nb array*/\
-		nb[threadIdx.x + blockDim.x*incVar] = gpuNb[seIndex][threadIdx.x + blockDim.x*incVar];\
+	for(incVar = 0;gpuCap[seIndex] > incVar*blockDim.x; incVar++){\
+	if(threadIdx.x + blockDim.x*incVar < gpuCap[seIndex]){	/*copy only contents of wList array*/\
+		wList[threadIdx.x + blockDim.x*incVar] = gpuWeightedList[seIndex][threadIdx.x + blockDim.x*incVar];\
 	}}
 
 #define MAP_THREADS_ONTO_IMAGE(incVar)\
@@ -23,26 +23,26 @@
 
 /*------------------ KERNELS ---------------------*/
 
-#define HODGES_SORT_ARR_SIZE ((gpuNbSize[seIndex]*(gpuNbSize[seIndex]+1))/2)
+#define HODGES_SORT_ARR_SIZE ((gpuCap[seIndex]*(gpuCap[seIndex]+1))/2)
 #define WALSH_NB_TO_SHARED(incVar)\
-	for(incVar = 0;gpuNbSize[seIndex] > incVar*blockDim.x; incVar++){\
-	if(threadIdx.x + blockDim.x*incVar < gpuNbSize[seIndex]){/*copy only contents of nb array*/\
+	for(incVar = 0;gpuCap[seIndex] > incVar*blockDim.x; incVar++){\
+	if(threadIdx.x + blockDim.x*incVar < gpuCap[seIndex]){/*copy only contents of wList array*/\
 		sortArr[threadIdx.x + blockDim.x*incVar]=\
-		tex1Dfetch(uchar1DTextRef,arrIdx + nb[threadIdx.x + blockDim.x*incVar]);\
+		tex1Dfetch(uchar1DTextRef,arrIdx + wList[threadIdx.x + blockDim.x*incVar]);\
 	}}
 #define ODD (HODGES_SORT_ARR_SIZE%2)
 
 	//there are two indexes for each arithmetic average
 #define INT32_ALIGNED_WALSH_INDEXES_SIZE \
-	(((gpuNbSize[seIndex]*(gpuNbSize[seIndex]-1))*sizeof(unsigned char))/4+1)
+	(((gpuCap[seIndex]*(gpuCap[seIndex]-1))*sizeof(unsigned char))/4+1)
 	//spare a register? At least not force a register
-//#define WALSH_IDX_ARRAY(idx) (unsigned char*)&nb[gpuNbSize[seIndex]]+idx
+//#define WALSH_IDX_ARRAY(idx) (unsigned char*)&wList[gpuCap[seIndex]]+idx
 #define GENERATE_WALSH_INDEXES(incVar,incVarInner,tmpVar) \
-	for(incVar = 0; HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > incVar*blockDim.x; incVar++){\
+	for(incVar = 0; HODGES_SORT_ARR_SIZE-gpuCap[seIndex] > incVar*blockDim.x; incVar++){\
 		tmpVar = threadIdx.x + blockDim.x*incVar;\
-		if(tmpVar >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) break;\
-		for(incVarInner=1; tmpVar>=gpuNbSize[seIndex]-incVarInner; incVarInner++){\
-			tmpVar-= -incVarInner+gpuNbSize[seIndex];\
+		if(tmpVar >= HODGES_SORT_ARR_SIZE-gpuCap[seIndex]) break;\
+		for(incVarInner=1; tmpVar>=gpuCap[seIndex]-incVarInner; incVarInner++){\
+			tmpVar-= -incVarInner+gpuCap[seIndex];\
 		}\
 		walshIdxArr[2*(threadIdx.x + blockDim.x*incVar)  ] = incVarInner-1;\
 		walshIdxArr[2*(threadIdx.x + blockDim.x*incVar)+1] = incVarInner+tmpVar;\
@@ -55,11 +55,11 @@
 	//array index is approprietally set for each subgroup
 #define WALSH_NB_TO_SHARED_PARALELL(incVar,tmpVar)\
 	for(incVar = 0,tmpVar = threadIdx.x%THREADS_PER_PIXEL;\
-	 gpuNbSize[seIndex] > incVar;\
+	 gpuCap[seIndex] > incVar;\
 	 incVar += THREADS_PER_PIXEL, tmpVar += THREADS_PER_PIXEL){\
 			/*do not write behind sortArr*/\
-		if(tmpVar >= gpuNbSize[seIndex]) break;\
-		sortArr[tmpVar]=tex1Dfetch(uchar1DTextRef,arrIdx + nb[tmpVar]);\
+		if(tmpVar >= gpuCap[seIndex]) break;\
+		sortArr[tmpVar]=tex1Dfetch(uchar1DTextRef,arrIdx + wList[tmpVar]);\
 	}
 
 /*
@@ -79,16 +79,16 @@ template<typename imDataType>
 __global__ void GPUhodgesmedOpt(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned nb[];
+	extern __shared__ unsigned wList[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 			//will run multiple times only if nbsize > number of threads
 	SE_TO_SHARED(thread);
 	__syncthreads();
 
 		//for storing indexes to generate wlist (would it be faster to precompute and load from glob. mem?)
-	unsigned char *walshIdxArr = (unsigned char*)&nb[gpuNbSize[seIndex]];
+	unsigned char *walshIdxArr = (unsigned char*)&wList[gpuCap[seIndex]];
 		//each warp (generally group of threads) has its own sortArr
-	imDataType *sortArr = (imDataType*)&nb[gpuNbSize[seIndex] + INT32_ALIGNED_WALSH_INDEXES_SIZE 
+	imDataType *sortArr = (imDataType*)&wList[gpuCap[seIndex] + INT32_ALIGNED_WALSH_INDEXES_SIZE 
 			+ INT32_ALIGNED_HODGES_SORT_ARR_SIZE*(threadIdx.x/THREADS_PER_PIXEL)];
 	unsigned arrIdx, lesser, bigger;
 
@@ -108,21 +108,21 @@ __global__ void GPUhodgesmedOpt(imDataType* dst, int seIndex, imDataType* srcA){
 		__syncthreads();
 			//generate Walsh list
 		//if(thread < gpuImageSize){
-		//for(thread = 0; HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread*THREADS_PER_PIXEL; thread++){
+		//for(thread = 0; HODGES_SORT_ARR_SIZE-gpuCap[seIndex] > thread*THREADS_PER_PIXEL; thread++){
 		//		//store averages behind nbpixel values
-		//	if((threadIdx.x%THREADS_PER_PIXEL)+THREADS_PER_PIXEL*thread >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;
-		//	sortArr[(threadIdx.x % THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread + gpuNbSize[seIndex]] =
+		//	if((threadIdx.x%THREADS_PER_PIXEL)+THREADS_PER_PIXEL*thread >= HODGES_SORT_ARR_SIZE-gpuCap[seIndex]) goto SYNC1;
+		//	sortArr[(threadIdx.x % THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread + gpuCap[seIndex]] =
 		//		((unsigned)sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)+1]]
 		//		+sortArr[walshIdxArr[2*((threadIdx.x%THREADS_PER_PIXEL) + THREADS_PER_PIXEL*thread)]])/2;
 		//}
 		//}
 		if(thread < gpuImageSize){
 			for(thread = 0, arrIdx = threadIdx.x%THREADS_PER_PIXEL; 
-			 HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread; 
+			 HODGES_SORT_ARR_SIZE-gpuCap[seIndex] > thread; 
 			 thread += THREADS_PER_PIXEL, arrIdx += THREADS_PER_PIXEL){
 					//store averages behind nbpixel values
-				if(arrIdx >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;
-				sortArr[arrIdx + gpuNbSize[seIndex]] =
+				if(arrIdx >= HODGES_SORT_ARR_SIZE-gpuCap[seIndex]) goto SYNC1;
+				sortArr[arrIdx + gpuCap[seIndex]] =
 					((unsigned)sortArr[walshIdxArr[2*(arrIdx)+1]]
 					+sortArr[walshIdxArr[2*(arrIdx)]])/2;
 			}
@@ -180,13 +180,13 @@ template<typename imDataType>
 __global__ void GPUhodgesmedfirst(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned nb[];
+	extern __shared__ unsigned wList[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 			//will run multiple times only if nbsize > number of threads
 	SE_TO_SHARED(thread);
 	__syncthreads();
 
-	imDataType *sortArr = (imDataType*)&nb[gpuNbSize[seIndex]];
+	imDataType *sortArr = (imDataType*)&wList[gpuCap[seIndex]];
 	unsigned arrIdx, lesser, bigger;
 
 		//process sequentially as much pixels as is block size
@@ -197,16 +197,16 @@ __global__ void GPUhodgesmedfirst(imDataType* dst, int seIndex, imDataType* srcA
 		WALSH_NB_TO_SHARED(thread);
 		__syncthreads();
 			//generate Walsh list
-		for(thread = 0; HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex] > thread*blockDim.x; thread++){
+		for(thread = 0; HODGES_SORT_ARR_SIZE-gpuCap[seIndex] > thread*blockDim.x; thread++){
 				//determine from which two elemets average is to be calcualted
 			unsigned j;
 			j = threadIdx.x + blockDim.x*thread;
-			if(j >= HODGES_SORT_ARR_SIZE-gpuNbSize[seIndex]) goto SYNC1;	//too high
-			for(arrIdx=1; j>=gpuNbSize[seIndex]-arrIdx; arrIdx++){										//arrIdx as temporary
-				j-= -arrIdx+gpuNbSize[seIndex];
+			if(j >= HODGES_SORT_ARR_SIZE-gpuCap[seIndex]) goto SYNC1;	//too high
+			for(arrIdx=1; j>=gpuCap[seIndex]-arrIdx; arrIdx++){										//arrIdx as temporary
+				j-= -arrIdx+gpuCap[seIndex];
 			}
 				//store averages behind nbpixel values
-			sortArr[threadIdx.x+blockDim.x*thread + gpuNbSize[seIndex]] = 
+			sortArr[threadIdx.x+blockDim.x*thread + gpuCap[seIndex]] = 
 				((unsigned)sortArr[arrIdx-1]+sortArr[j+arrIdx])/2;
 SYNC1:
 			__syncthreads();
@@ -249,14 +249,14 @@ SYNC2:
 
 /*####################################################################################################*/
 
-#define HODGES2_SORT_ARR_SIZE ((gpuNbSize[seIndex]*(gpuNbSize[seIndex]+1))/4+2)
+#define HODGES2_SORT_ARR_SIZE ((gpuCap[seIndex]*(gpuCap[seIndex]+1))/4+2)
 #define HODGES2_INT32_ALIGNED_SORT_ARR_SIZE ((HODGES2_SORT_ARR_SIZE*sizeof(imDataType))/4+1)
 
 template<typename imDataType>
 __global__ void GPUhodgesmedforget(imDataType* dst, int seIndex, imDataType* srcA){
 
 			//copy nbhood into shared memory
-	extern __shared__ unsigned nb[];
+	extern __shared__ unsigned wList[];
 	unsigned thread = 0;							//temporary usage as incremental varible
 
 			//will run multiple times only if nbsize > number of threads
@@ -271,22 +271,22 @@ __global__ void GPUhodgesmedforget(imDataType* dst, int seIndex, imDataType* src
 
 		//attach array for partial sorting
 	imDataType *sortArr = 
-		(imDataType*)&nb[gpuNbSize[seIndex]+HODGES2_INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
+		(imDataType*)&wList[gpuCap[seIndex]+HODGES2_INT32_ALIGNED_SORT_ARR_SIZE*threadIdx.x];
 
 		//fill/initialize array for partial sorting, find min, max consequently
-	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[0]);
+	sortArr[0] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[0]);
 	imDataType *_min = sortArr, *_max = sortArr;					//init min,max (indexes to sortArr)
 
 		//load nbhood
-	for(thread = 1;thread<gpuNbSize[seIndex]; thread++){
-		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + nb[thread]);
+	for(thread = 1;thread<gpuCap[seIndex]; thread++){
+		sortArr[thread] = tex1Dfetch(uchar1DTextRef,arrIdx + wList[thread]);
 		if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
 		if(sortArr[thread] < *_min) _min = &(sortArr[thread]);
 	}
 		//generate walsh list (backwards)
 	int i,j;
-	for(i = gpuNbSize[seIndex]-1; i > 0; i--){
-		for(j = gpuNbSize[seIndex]; j > i; j--){
+	for(i = gpuCap[seIndex]-1; i > 0; i--){
+		for(j = gpuCap[seIndex]; j > i; j--){
 			if(thread >= HODGES2_SORT_ARR_SIZE) goto FINISH_INIT;	//only fill array
 			sortArr[thread] = ((unsigned)sortArr[i]+sortArr[j])/2;
 			if(sortArr[thread] > *_max) _max = &(sortArr[thread]);
@@ -303,7 +303,7 @@ FINISH_INIT:
 		*_max = (_min == &(sortArr[HODGES2_SORT_ARR_SIZE-1-i]))?sortArr[0]:sortArr[HODGES2_SORT_ARR_SIZE-1-i];
 
 			//end?
-		if(gpuNbSize[seIndex]%2){			//to spare one/two elements respectively
+		if(gpuCap[seIndex]%2){			//to spare one/two elements respectively
 			if(HODGES2_SORT_ARR_SIZE-i <= 3){		//odd	
 				dst[arrIdx] = sortArr[1];	//position of the median
 				return;
@@ -318,8 +318,8 @@ FINISH_INIT:
 			//use thread, j as temporary variables
 		thread = i;		//will be consumed/changed
 			//same process as in GPUhodgesmed
-		for(j=1; thread>=gpuNbSize[seIndex]-j; j++){
-			thread-= -j+gpuNbSize[seIndex];
+		for(j=1; thread>=gpuCap[seIndex]-j; j++){
+			thread-= -j+gpuCap[seIndex];
 		}
 		sortArr[0] = ((unsigned)sortArr[j-1]+sortArr[j+thread])/2;
 			

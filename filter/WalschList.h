@@ -10,13 +10,13 @@
 #define HODGES_OPT_THREADS_PER_PIXEL (16)
 	//+8 = +2 types for lower and higher median, +2 control
 #define HODGES_ADD_MEM_SIZE_PER_BLOCK \
-	(((((sem->GetSE(seIndex)->nbSize*(sem->GetSE(seIndex)->nbSize+1)+8)/2)*sizeof(imDataType))/4+1)*sizeof(unsigned))
+	(((((sem->GetSE(seIndex)->capacity*(sem->GetSE(seIndex)->capacity+1)+8)/2)*sizeof(imDataType))/4+1)*sizeof(unsigned))
 #define HODGES_CPU_SORT_ARR_SIZE \
-	((sem->GetSE(seIndex)->nbSize*(sem->GetSE(seIndex)->nbSize+1))/2)
+	((sem->GetSE(seIndex)->capacity*(sem->GetSE(seIndex)->capacity+1))/2)
 #define HODGES_FORGET_ADD_MEM_PER_BLOCK \
-	((((((sem->GetSE(seIndex)->nbSize*(sem->GetSE(seIndex)->nbSize+1))/4+2)*sizeof(imDataType)))/4+1)*sizeof(unsigned))
+	((((((sem->GetSE(seIndex)->capacity*(sem->GetSE(seIndex)->capacity+1))/4+2)*sizeof(imDataType)))/4+1)*sizeof(unsigned))
 #define HODGES_OPT_WALSH_INDEXES_SIZE \
-	((((sem->GetSE(seIndex)->nbSize*(sem->GetSE(seIndex)->nbSize-1))*sizeof(unsigned char))/4+1)*sizeof(unsigned))
+	((((sem->GetSE(seIndex)->capacity*(sem->GetSE(seIndex)->capacity-1))*sizeof(unsigned char))/4+1)*sizeof(unsigned))
 
 #define HODGES_FIRST_TOTAL_ADD_MEM HODGES_ADD_MEM_SIZE_PER_BLOCK
 #define HODGES_OPT_TOTAL_ADD_MEM \
@@ -33,11 +33,11 @@ float Filter<imDataType>::WMedian(imDataType* dst, int seIndex, imDataType* srcA
 		//cout << "median on GPU\n";
 		unsigned blocks = GetImageSize()/HODGES_THREAD_PER_BLOCK + 1;
 		//cout << blocks <<" kernel blocks used\n";
-		unsigned extraMem = (sem->GetSE(seIndex)->nbSize)*sizeof(unsigned)
+		unsigned extraMem = (sem->GetSE(seIndex)->capacity)*sizeof(unsigned)
 				+ HODGES_OPT_TOTAL_ADD_MEM;
 		cout << extraMem <<" extra mem per block used\n";
 		//cout << "ADD_MEM_SIZE_PER_BLOCK: " << BES_ADD_MEM_SIZE_PER_BLOCK <<'\n';
-		//cout << "arr size: " << ((sem->GetSE(seIndex)->nbSize)/2+2) <<'\n';
+		//cout << "arr size: " << ((sem->GetSE(seIndex)->capacity)/2+2) <<'\n';
 			//bind texture
 		uchar1DTextRef.normalized = false;
 		uchar1DTextRef.addressMode[0] = cudaAddressModeClamp;
@@ -70,12 +70,12 @@ float Filter<imDataType>::WMedian(imDataType* dst, int seIndex, imDataType* srcA
 
 		unsigned m,n,o;
 		BEGIN_FOR3D(pos)	
-			for(m=0;m < se->nbSize; m++){
-				values[m] = srcA[pos + se->nb[m]];
+			for(m=0;m < se->capacity; m++){
+				values[m] = srcA[pos + se->wList[m]];
 			}	
-			o = se->nbSize;
-			for(m=0; m < se->nbSize-1; m++){
-				for(n=m+1; n < se->nbSize; n++,o++)
+			o = se->capacity;
+			for(m=0; m < se->capacity-1; m++){
+				for(n=m+1; n < se->capacity; n++,o++)
 					values[o] = ((unsigned)values[m]+values[n])/2;
 			}	
 

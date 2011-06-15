@@ -129,10 +129,10 @@ float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA,
 
 	BEGIN_FOR3D(pos)		
 		if(srcA[pos] < p4.srcB[pos]){
-			dst[pos] = 0;
+			//dst[pos] = 0;
+			dst[pos] = (p4.srcB[pos] - srcA[pos])*10;
 		}else{
-			dst[pos] = (srcA[pos] -
-				p4.srcB[pos])*10;
+			dst[pos] = (srcA[pos] - p4.srcB[pos])*10;
 		}
 	END_FOR3D;
 	return 1;
