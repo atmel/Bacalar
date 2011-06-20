@@ -91,14 +91,14 @@ float Filter<imDataType>::Dilatate(imDataType* dst, int seIndex, imDataType* src
 }
 
 
-template <typename imDataType>
-float Filter<imDataType>::Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
-	return 1; 
-}
-template <typename imDataType>
-float Filter<imDataType>::Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
-	return 1; 
-}
+//template <typename imDataType>
+//float Filter<imDataType>::Open (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+//	return 1; 
+//}
+//template <typename imDataType>
+//float Filter<imDataType>::Close (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+//	return 1; 
+//}
 
 #define EDGE_TPB (128)
 template <typename imDataType>

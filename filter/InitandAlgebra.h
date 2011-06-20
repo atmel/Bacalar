@@ -39,10 +39,10 @@ unsigned long Filter<imDataType>::sliceUpperBound = 0;
 
 
 template <typename imDataType>
-SEManager<imDataType>* Filter<imDataType>::sem = NULL;
+SEManager* Filter<imDataType>::sem = NULL;
 
 template <typename imDataType>
-bool Filter<imDataType>::Init(SEManager<imDataType> *_sem){
+bool Filter<imDataType>::Init(SEManager *_sem){
 	//imageDim = ImageInfo::GetDim();							
 	//frameSize = ImageInfo::GetFrameSize();
 

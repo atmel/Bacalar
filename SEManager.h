@@ -44,7 +44,7 @@ typedef struct _structEl{
 
 
 
-template <typename imDataType>
+
 class SEManager : private ImageInfo{
 
 	static bool singletonFlag;
@@ -55,7 +55,7 @@ class SEManager : private ImageInfo{
 
 public:
 
-	static SEManager<imDataType>* Create();
+	static SEManager* Create();
 	int GetSEIndex(string *name);
 	structEl *GetSE(int index);
 	bool DeleteAll();							//SE refresh - SEs still have to be parsed, so merging is worthless 

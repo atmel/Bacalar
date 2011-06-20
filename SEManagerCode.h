@@ -4,19 +4,19 @@
 
 #include <iostream>
 using namespace std;
-template<typename imDataType>
-bool SEManager<imDataType>::singletonFlag = 0;
+
+bool SEManager::singletonFlag = 0;
 
 /*
 	Create function handles singleton policy
 */
 
-template<typename imDataType>
-SEManager<imDataType>* SEManager<imDataType>::Create()
+
+SEManager* SEManager::Create()
 {
 	if(singletonFlag) return NULL;
  
-	return new SEManager<imDataType>();
+	return new SEManager();
 }
 /*
 	Private contructor of SEManager
@@ -28,8 +28,8 @@ SEManager<imDataType>* SEManager<imDataType>::Create()
 		function into pointer differences within image (dimensions
 		are known, so absolute differences can be calculated)
 */
-template<typename imDataType>
-SEManager<imDataType>::SEManager(){
+
+SEManager::SEManager(){
 
 	if(!GetDimensions(0)) return;			//no image loaded
 
@@ -71,8 +71,8 @@ SEManager<imDataType>::SEManager(){
 	to 0,0,0 coordinates -- see ImageManager.h.
 
 */
-template<typename imDataType>
-int SEManager<imDataType>::Parse2SE(string *name, unsigned *mask){
+
+int SEManager::Parse2SE(string *name, unsigned *mask){
 	
 	int justAdded;
 
@@ -108,13 +108,13 @@ int SEManager<imDataType>::Parse2SE(string *name, unsigned *mask){
 
 
 
-template<typename imDataType>
-structEl* SEManager<imDataType>::GetSE(int index){
+
+structEl* SEManager::GetSE(int index){
 	return se[index];
 }
 
-template<typename imDataType>
-bool SEManager<imDataType>::SendToGpu(){
+
+bool SEManager::SendToGpu(){
 	
 	unsigned capacities[MAX_SE];//, medSizes[MAX_SE], BESSizes[MAX_SE];
 	for(unsigned i=0;i<se.size();i++){

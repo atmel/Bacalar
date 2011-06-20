@@ -58,11 +58,13 @@ float Filter<imDataType>::WMedian(imDataType* dst, int seIndex, imDataType* srcA
 		return (float)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
-		imDataType *values;
+		imDataType *values, *values2;
 		structEl *se = sem->GetSE(seIndex);
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		values = new imDataType[HODGES_CPU_SORT_ARR_SIZE];
-		Filter<imDataType>::MedianFindOpt(NULL,HODGES_CPU_SORT_ARR_SIZE);		//initialize median
+		values2 = new imDataType[HODGES_CPU_SORT_ARR_SIZE];
+		Filter<imDataType>::QsortOpt(NULL,HODGES_CPU_SORT_ARR_SIZE);		//initialize median
+		Filter<imDataType>::MedianFindOptSimple(NULL,HODGES_CPU_SORT_ARR_SIZE);		//initialize median
 		unsigned pos;
 
 		//3D
@@ -72,14 +74,24 @@ float Filter<imDataType>::WMedian(imDataType* dst, int seIndex, imDataType* srcA
 		BEGIN_FOR3D(pos)	
 			for(m=0;m < se->capacity; m++){
 				values[m] = srcA[pos + se->wList[m]];
+				values2[m] = srcA[pos + se->wList[m]];
 			}	
 			o = se->capacity;
 			for(m=0; m < se->capacity-1; m++){
-				for(n=m+1; n < se->capacity; n++,o++)
+				for(n=m+1; n < se->capacity; n++,o++){
 					values[o] = ((unsigned)values[m]+values[n])/2;
+					values2[o] = ((unsigned)values2[m]+values2[n])/2;
+				}
 			}	
 
-			Filter<imDataType>::MedianFindOpt(values);
+			Filter<imDataType>::QsortOpt(values);
+			//cout << "bla\n";
+			Filter<imDataType>::MedianFindOptSimple(values2);
+			//cout << "bla\n";
+			for(m=0;m<HODGES_CPU_SORT_ARR_SIZE;m++){
+				values[m] -= values2[m];		//if it works fine
+			}
+
 			if(HODGES_CPU_SORT_ARR_SIZE%2){							//odd
 				dst[pos] = values[HODGES_CPU_SORT_ARR_SIZE/2];
 			}else{

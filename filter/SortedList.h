@@ -107,10 +107,12 @@ float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fo
 		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
-		imDataType *values;
+		imDataType *values, *values2;
 		structEl *se = sem->GetSE(seIndex);
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		values = new imDataType[se->capacity];
+		values2 = new imDataType[se->capacity];
+		Filter<imDataType>::QsortOpt(NULL,se->capacity);
 		Filter<imDataType>::UniBESFind(NULL,se->capacity);		//initialize median
 		unsigned long pos;
 
@@ -120,9 +122,15 @@ float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fo
 		BEGIN_FOR3D(pos)	
 			for(unsigned m=0;m < se->capacity; m++){
 				values[m] = srcA[pos + se->wList[m]];
+				values2[m] = srcA[pos + se->wList[m]];
 			}		
 
 			Filter<imDataType>::UniBESFind(values);
+			Filter<imDataType>::QsortOpt(values2);
+			for(unsigned m=0;m < se->capacity; m++){
+				values[m]-= values2[m];
+			}
+
 			if(se->capacity%2){							//odd
 				dst[pos] = ((unsigned)values[se->capacity/4]
 					+ 2*values[se->capacity/2] + values[3*se->capacity/4])/4;

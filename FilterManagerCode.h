@@ -19,7 +19,7 @@ bool FilterManager<imDataType>::singletonFlag = 0;
 
 
 template <typename imDataType> 
-FilterManager<imDataType>* FilterManager<imDataType>::Create(SEManager<imDataType> *_SEMan, ImageManager<imDataType> *_ImagMan){
+FilterManager<imDataType>* FilterManager<imDataType>::Create(SEManager *_SEMan, ImageManager<imDataType> *_ImagMan){
 
 	if(singletonFlag) return NULL;
 
@@ -27,7 +27,7 @@ FilterManager<imDataType>* FilterManager<imDataType>::Create(SEManager<imDataTyp
 }
 
 template <typename imDataType> 
-FilterManager<imDataType>::FilterManager(SEManager<imDataType> *_SEMan, ImageManager<imDataType> *_ImagMan){
+FilterManager<imDataType>::FilterManager(SEManager *_SEMan, ImageManager<imDataType> *_ImagMan){
 	
 	SEMan = _SEMan;
 	ImagMan = _ImagMan;

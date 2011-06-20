@@ -25,7 +25,7 @@ class MainManager{
 	
 	FilterManager<imDataType> *fiM;
 	ImageManager<imDataType> *imM;
-	SEManager<imDataType> *seM;
+	SEManager *seM;
 
 	string load, sEls, subF, filter;
 

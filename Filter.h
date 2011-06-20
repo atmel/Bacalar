@@ -36,7 +36,7 @@ template <typename imDataType>
 class Filter : private ImageInfo, private CudaInfo{
 
 	static unsigned long sliceUpperBound, lineUpperBound;	//for fast FORxD macro
-	static SEManager<imDataType> *sem;
+	static SEManager *sem;
 
 	//supporting functions (CPU):
 	inline imDataType Min(imDataType x, imDataType y)
@@ -44,15 +44,19 @@ class Filter : private ImageInfo, private CudaInfo{
 	inline imDataType Max(imDataType x, imDataType y)
 		{return x<y?y:x;}
 
-public:static bool QsortOpt(imDataType *base, unsigned initBaseLength = 0); 
-	   static bool MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
-	   static void FindKth(imDataType *base, unsigned &first, unsigned &last, unsigned k);
-	   static bool UniBESFind(imDataType *base, unsigned initBaseLength = 0);
-	   static imDataType Forgetful(imDataType *sortArr, unsigned initBaseLength);
+public:	static bool QsortOpt(imDataType *base, unsigned initBaseLength = 0); 
+		static bool MedianFindOpt(imDataType *base, unsigned initBaseLength = 0); 
+	    static bool MedianFindOptSimple(imDataType *base, unsigned initBaseLength = 0);
+		static void FindKth(imDataType *base, unsigned &first, unsigned &last, unsigned k);
+		static bool UniBESFind(imDataType *base, unsigned initBaseLength = 0);
+		static void InsertSortMin(imDataType *base, unsigned first, unsigned last, unsigned count);
+		static void InsertSortMax(imDataType *base, unsigned first, unsigned last, unsigned count);
+
+		static imDataType Forgetful(imDataType *sortArr, unsigned initBaseLength);
 
 public:
 
-	static bool Init(SEManager<imDataType> *_sem);							//initialize static variables
+	static bool Init(SEManager *_sem);							//initialize static variables
 
 	//CPU
 	//basic operations

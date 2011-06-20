@@ -14,19 +14,19 @@
 
 */
 
-#define SWAP(X,Y) swap=base[(X)];base[(X)]=base[(Y)];base[(Y)]=swap
+#define SWAP(X,Y) {swap=base[(X)];base[(X)]=base[(Y)];base[(Y)]=swap;}
 
 
 /*
 
-	This function performs partial sorting, resulting in median being in the right place
-	It is actually modified quicksort, where branches not containing median are not sorted.
-	Sorting ends when (lengh/2)th and (lengh/2 + 1)th elements are in the right place, so 
-	median for odd or even length can be calculated
+	Simplier version of last function - finds only length/2 element
 
 */
+
+#define EFFICIENT_MAX 8
+
 template<typename imDataType>
-bool Filter<imDataType>::MedianFindOpt(imDataType *base, unsigned initBaseLength){
+bool Filter<imDataType>::MedianFindOptSimple(imDataType *base, unsigned initBaseLength){
 	
 	static int first, last;								//we have only pone branch here
 	static unsigned length = 0;							//base length (stored for multiple calls)
@@ -35,54 +35,47 @@ bool Filter<imDataType>::MedianFindOpt(imDataType *base, unsigned initBaseLength
 		length = initBaseLength;
 		return true;
 	}
-	static unsigned progress, rising, falling, pivot;
-	static imDataType swap;								//for SWAP macro
+	static unsigned rising, falling, pivot, progress;
+	static imDataType swap = 0;								//for SWAP macro
 
-	progress = 2;							//is deduced by one, when one of two middle elements is found
+	progress = 2;
 	first = 0;								//set full range
 	last = length-1;
 
 	while(1){
-START:
-		if(progress == 0) break;						//both elements are in place
-		if(last-first < 2){								//only swap if needed
-			if(last-first == 1)
-				if(base[first] > base[last]){
-					SWAP(first,last);
-				}
-			progress--;									//els can be so close only at the end
-			continue;
+		if(!progress) return true;
+		if(last-first < EFFICIENT_MAX){	//only swap if needed
+			//cout << "end\n";
+			if(last-(length/2) < (length/2 - 1 - first))
+				InsertSortMax(base,first,last,last-(length/2)+2);	
+			else
+				InsertSortMin(base,first,last,(length/2)-first+1);	
+			return true;
 		}
+		//set pivot as median of first, first+1, last: prevents search to run out of array with no
+		//additional condition! (elements must be swapped to the right order)
+
 		pivot = first;
 		rising = first+1;
 		falling = last;
+		if(base[rising] > base[falling]) SWAP(rising,falling);
+		if(base[rising] > base[pivot]) SWAP(rising,pivot);
+		if(base[falling] < base[pivot]) SWAP(falling,pivot);
 
-		while(1){											//swap all wrong-placed elements
-			//fall until first element < pivot is found
-			while(base[falling] >= base[pivot]){
-				falling--;
-				//handle special cases
-				if(falling <= pivot){						//everything in range >= pivot -> pivot is in place
-					first++;								//only shrink range and run again
-					if((falling >= length/2-1)&&(falling <= (length/2))){
-						progress--;							//falling points to the pivot, which is in the right place
-					}
-					goto START;								//escape from multiple cycles, save one variable
-				}
-			}
+		while(1){								//swap all wrong-placed elements
+			//fall until first element <= pivot is found
+			do falling--; while(base[falling] > base[pivot]);		//thanks to med. no need to check underrun
 			//rise until first element >= pivot is found
-			while((base[rising] < base[pivot])&&(rising < falling)){
-				rising++;
-			}
+			do rising++; while(base[rising] < base[pivot]);		//also, no overrun check
 			//done and continue or swap and go again
-			if(rising != falling){							//swap rising and falling
-				SWAP(rising,falling);
-			}else{											//swap pivot and this
+			if(rising > falling){	
 				SWAP(pivot,falling);
 				break;
+			}else{					
+				SWAP(rising,falling);
 			}
 		}
-		//find where falling ended and continue with branch containing median
+		//find where falling ended and continue with branch containing k-th element
 		//falling always contain element, which has been sorted to the right place
 		if(falling > (length/2)){			//most trivial cases
 			last = falling-1;	
@@ -97,8 +90,37 @@ START:
 			}
 		}
 	}
-	return true;
 }
+/*
+	Auxiliary insertion sort for small branches
+*/
+template<typename imDataType>
+void Filter<imDataType>::InsertSortMin(imDataType *base, unsigned first, unsigned last, unsigned count){
+	static unsigned i,j,min;
+	static imDataType swap;
+
+	for(i=0;i<count;i++){				//find only count minimal elements
+		min = first+i;
+		for(j=min+1; j<=last ;j++){		//but search whole range
+			if(base[min] > base[j]) min = j;
+		}
+		SWAP(min,first+i);
+	}
+}
+template<typename imDataType>
+void Filter<imDataType>::InsertSortMax(imDataType *base, unsigned first, unsigned last, unsigned count){
+	static unsigned i,j,max;
+	static imDataType swap;
+
+	for(i=0;i<count;i++){				//find only count minimal elements
+		max = last-i;
+		for(j=first;j<last-i;j++){	//but search whole range
+			if(base[max] < base[j]) max = j;
+		}
+		SWAP(max,last-i);
+	}
+}
+
 
 /*
 Find single k-th element -- used in BES filter
@@ -110,39 +132,35 @@ void Filter<imDataType>::FindKth(imDataType *base, unsigned &first, unsigned &la
 	static imDataType swap;			//for SWAP macro
 
 	while(1){
-START_KTH:
-		if(last-first < 2){								//only swap if needed
-			if(last-first == 1)
-				if(base[first] > base[last]){
-					SWAP(first,last);
-				}				
+		if(last-first < EFFICIENT_MAX){	//only swap if needed
+			//cout << "end\n";
+			if(last-k < k-first)
+				InsertSortMax(base,first,last,last-k+1);	
+			else
+				InsertSortMin(base,first,last,k-first+1);	
 			return;
 		}
+		//set pivot as median of first, first+1, last: prevents search to run out of array with no
+		//additional condition! (elements must be swapped to the right order)
+
 		pivot = first;
 		rising = first+1;
 		falling = last;
+		if(base[rising] > base[falling]) SWAP(rising,falling);
+		if(base[rising] > base[pivot]) SWAP(rising,pivot);
+		if(base[falling] < base[pivot]) SWAP(falling,pivot);
 
-		while(1){										//swap all wrong-placed elements
-			//fall until first element < pivot is found
-			while(base[falling] >= base[pivot]){
-				falling--;
-				//handle special cases
-				if(falling <= pivot){					//everything in range >= pivot -> pivot is in place
-					first++;							//only shrink range and run again
-					if(falling == k) return;			//falling points to the pivot, which is in the right place, DONE
-					goto START_KTH;							//escape from multiple cycles, save one variable
-				}
-			}
+		while(1){								//swap all wrong-placed elements
+			//fall until first element <= pivot is found
+			do falling--; while(base[falling] > base[pivot]);		//thanks to med. no need to check underrun
 			//rise until first element >= pivot is found
-			while((base[rising] < base[pivot])&&(rising < falling)){
-				rising++;
-			}
+			do rising++; while(base[rising] < base[pivot]);		//also, no overrun check
 			//done and continue or swap and go again
-			if(rising != falling){						//swap rising and falling
-				SWAP(rising,falling);
-			}else{										//swap pivot and this
+			if(rising > falling){	
 				SWAP(pivot,falling);
 				break;
+			}else{					
+				SWAP(rising,falling);
 			}
 		}
 		//find where falling ended and continue with branch containing k-th element
@@ -186,43 +204,36 @@ bool Filter<imDataType>::UniBESFind(imDataType *base, unsigned initBaseLength){
 	q1max = q3min = length/2;
 
 	while(1){
-START:
-		if(progress == 0) break;						//both elements are in place
-		if(last-first < 2){								//only swap if needed
-			if(last-first == 1)
-				if(base[first] > base[last]){
-					SWAP(first,last);
-				}
-			progress--;									//els can be so close only at the end
-			continue;
+		if(!progress) break;
+		if(last-first < EFFICIENT_MAX){	//only swap if needed
+			//cout << "end\n";
+			if(last-(length/2) < (length/2 - 1 - first))
+				InsertSortMax(base,first,last,last-(length/2)+2);	
+			else
+				InsertSortMin(base,first,last,(length/2)-first+1);	
+			break;
 		}
+		//set pivot as median of first, first+1, last: prevents search to run out of array with no
+		//additional condition! (elements must be swapped to the right order)
+
 		pivot = first;
 		rising = first+1;
 		falling = last;
+		if(base[rising] > base[falling]) SWAP(rising,falling);
+		if(base[rising] > base[pivot]) SWAP(rising,pivot);
+		if(base[falling] < base[pivot]) SWAP(falling,pivot);
 
-		while(1){											//swap all wrong-placed elements
-			//fall until first element < pivot is found
-			while(base[falling] >= base[pivot]){
-				falling--;
-				//handle special cases
-				if(falling <= pivot){						//everything in range >= pivot -> pivot is in place
-					first++;								//only shrink range and run again
-					if((falling >= length/2-1)&&(falling <= (length/2))){
-						progress--;							//falling points to the pivot, which is in the right place
-					}
-					goto START;								//escape from multiple cycles, save one variable
-				}
-			}
+		while(1){								//swap all wrong-placed elements
+			//fall until first element <= pivot is found
+			do falling--; while(base[falling] > base[pivot]);		//thanks to med. no need to check underrun
 			//rise until first element >= pivot is found
-			while((base[rising] < base[pivot])&&(rising < falling)){
-				rising++;
-			}
+			do rising++; while(base[rising] < base[pivot]);		//also, no overrun check
 			//done and continue or swap and go again
-			if(rising != falling){							//swap rising and falling
-				SWAP(rising,falling);
-			}else{											//swap pivot and this
+			if(rising > falling){	
 				SWAP(pivot,falling);
 				break;
+			}else{					
+				SWAP(rising,falling);
 			}
 		}
 		//find where falling ended and continue with branch containing median

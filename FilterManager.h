@@ -28,14 +28,14 @@ class FilterManager{
 	FilterList<imDataType> *mainList;
 	vector<FilterList<imDataType>> subList;
 
-	SEManager<imDataType> *SEMan;
+	SEManager *SEMan;
 	ImageManager<imDataType> *ImagMan;
 
-	FilterManager(SEManager<imDataType> *_SEMan, ImageManager<imDataType> *_ImagMan);
+	FilterManager(SEManager *_SEMan, ImageManager<imDataType> *_ImagMan);
 
 public:
 
-	static FilterManager<imDataType>* Create(SEManager<imDataType> *_SEMan, ImageManager<imDataType> *_ImagMan);
+	static FilterManager<imDataType>* Create(SEManager *_SEMan, ImageManager<imDataType> *_ImagMan);
 
 	bool Parse2Filter(string *in);			//parse to mainList
 	//bool Parse2CustomFilter(string *in);	//parse/adds to subList
