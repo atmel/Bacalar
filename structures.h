@@ -28,4 +28,6 @@ through the program
 #define FILENAME_UNSPECIFIED	(-106)
 #define UNABLE_TO_OPEN_FILE		(-107)
 
+#define PI 3.14159265358979323846264
+
 

@@ -12,6 +12,7 @@
 
 #include "Bacalar/Filter.h"	
 #include <math.h>
+#include <time.h>
 
 //template <typename imDataType>
 //unsigned Filter<imDataType>::imageDim = 0;
@@ -142,14 +143,50 @@ float Filter<imDataType>::ASubB (imDataType* dst, int seIndex, imDataType* srcA,
 
 	Adds random noise to image
 
-	p4.k is in range 0-1000, determining noise level 0-<TYPE>_TRUE
+	p4.int2.k is in range 0-1000, determining noise level 0 - normal distribution with pixel value as expectation
+	p4.int2.j/1000 is contamination
 
 */
 
 template <typename imDataType>
 float Filter<imDataType>::AddNoise (imDataType* dst, int seIndex, imDataType* srcA, fourthParam<imDataType> p4){
+	srand(time(NULL));	//seed random
+	double noise;	//whole range
+	unsigned long pos;
+
+	BEGIN_FOR3D(pos)		
+		//contamination
+		if(rand() < RAND_MAX*p4.int2.j/1000){	//contaminate
+			if(rand() < RAND_MAX/2) dst[pos] = 0;
+			else{
+				if(typeid(imDataType) == typeid(unsigned char)){
+					dst[pos] = CHAR_TRUE;	
+				}else if(typeid(imDataType) == typeid(unsigned int)){
+					dst[pos] = INT_TRUE;	
+				}else if(typeid(imDataType) == typeid(float)){
+					dst[pos] = FLOAT_TRUE;	
+				}
+			}	
+		}else{	//no contamination
+			//gaussian noise through Box-Muller formula, input uniform range 0-1
+			noise = sqrt(-2*log((double)rand()/RAND_MAX))*cos(2*PI*((double)rand()/RAND_MAX));
+			if(typeid(imDataType) == typeid(unsigned char)){
+				noise *= (double)p4.int2.k*(CHAR_TRUE/1000.0);
+				noise += srcA[pos];					//add expectation
+				dst[pos] = (noise>CHAR_TRUE)?CHAR_TRUE:((noise<0.0)?0:noise);
+			}else if(typeid(imDataType) == typeid(unsigned int)){
+				noise *= (double)p4.int2.k*(INT_TRUE/1000.0);	
+				noise += srcA[pos];					//add expectation
+				dst[pos] = (noise>INT_TRUE)?INT_TRUE:((noise<0.0)?0:noise);
+			}else if(typeid(imDataType) == typeid(float)){
+				noise *= (double)p4.int2.k*(FLOAT_TRUE/1000.0);
+				noise += srcA[pos];					//add expectation
+				dst[pos] = (noise>FLOAT_TRUE)?FLOAT_TRUE:((noise<0.0)?0:noise);
+			}
+		}
+	END_FOR3D;
+	
 	return 1; 
-	//rand
 }
 
 #endif

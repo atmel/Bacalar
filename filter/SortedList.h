@@ -107,14 +107,16 @@ float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fo
 		return (double)((stop.QuadPart-start.QuadPart)*1000)/frq.QuadPart;
 
 	}else{
-		imDataType *values, *values2;
+		imDataType *values;//, *values2;
 		structEl *se = sem->GetSE(seIndex);
 		memset(dst,0,GetTotalPixelSize()*sizeof(imDataType));
 		values = new imDataType[se->capacity];
-		values2 = new imDataType[se->capacity];
-		Filter<imDataType>::QsortOpt(NULL,se->capacity);
+		//values2 = new imDataType[se->capacity];
+		//Filter<imDataType>::QsortOpt(NULL,se->capacity);
 		Filter<imDataType>::UniBESFind(NULL,se->capacity);		//initialize median
 		unsigned long pos;
+		unsigned q1 = ceil((float)se->capacity/4)-1;
+		unsigned q3 = floor((float)(3*se->capacity+4)/4)-1;
 
 		//3D
 			QueryPerformanceCounter(&start);
@@ -122,21 +124,41 @@ float Filter<imDataType>::BES(imDataType* dst, int seIndex, imDataType* srcA, fo
 		BEGIN_FOR3D(pos)	
 			for(unsigned m=0;m < se->capacity; m++){
 				values[m] = srcA[pos + se->wList[m]];
-				values2[m] = srcA[pos + se->wList[m]];
+				//values2[m] = srcA[pos + se->wList[m]];
 			}		
 
 			Filter<imDataType>::UniBESFind(values);
-			Filter<imDataType>::QsortOpt(values2);
-			for(unsigned m=0;m < se->capacity; m++){
-				values[m]-= values2[m];
-			}
-
+			//Filter<imDataType>::QsortOpt(values2);
+			
+//#define WHAT se->capacity/2
 			if(se->capacity%2){							//odd
-				dst[pos] = ((unsigned)values[se->capacity/4]
-					+ 2*values[se->capacity/2] + values[3*se->capacity/4])/4;
+				dst[pos] = (unsigned)((unsigned)values[q1]
+					+ 2*values[se->capacity/2] + values[q3])/4;
+
+				/*if(values[WHAT] != values2[WHAT]){
+					for(unsigned m=0;m < se->capacity; m++){
+						cout << (int)values[m] << " ";
+					}
+					cout << "\n";
+					for(unsigned m=0;m < se->capacity; m++){
+						cout << (int)values2[m] << " ";
+					}
+					cout << "-----------\n";
+				}*/
 			}else{
-				dst[pos] = ((unsigned)values[se->capacity/4] + values[se->capacity/2-1]
-					+ values[se->capacity/2] + values[(3*se->capacity)/4])/4;
+				dst[pos] = (unsigned)((unsigned)values[q1] + values[se->capacity/2-1]
+					+ values[se->capacity/2] + values[q3])/4;
+
+				/*if(values[WHAT] != values2[WHAT]){
+					for(unsigned m=0;m < se->capacity; m++){
+						cout << (int)values[m] << " ";
+					}
+					cout << "\n";
+					for(unsigned m=0;m < se->capacity; m++){
+						cout << (int)values2[m] << " ";
+					}
+					cout << "------------\n";
+				}*/
 			}
 		END_FOR3D;
 

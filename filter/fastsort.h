@@ -2,25 +2,16 @@
 
 #ifndef FASTSORT
 #define FASTSORT
-
 #include "Bacalar/Filter.h"
 #include <math.h>
-
 /*
-
 	Optimized quicksort:
 		- fixed-length stacks (allocated only once per filter function call 
 			through optional parameter)
-
 */
-
 #define SWAP(X,Y) {swap=base[(X)];base[(X)]=base[(Y)];base[(Y)]=swap;}
-
-
 /*
-
 	Simplier version of last function - finds only length/2 element
-
 */
 
 #define EFFICIENT_MAX 8
@@ -186,31 +177,34 @@ template<typename imDataType>
 bool Filter<imDataType>::UniBESFind(imDataType *base, unsigned initBaseLength){
 	
 	static int first, last;								//we have only pone branch here
-	static unsigned length = 0, q1pos, q3pos;			//base length (stored for multiple calls)
+	static unsigned length = 0, q1pos, q3pos, upper, lower;	//base length (stored for multiple calls)
 
 	if(initBaseLength != 0){							//initialization
 		length = initBaseLength;
 		q1pos = ceil((float)length/4)-1;				//BES constatants
 		q3pos = floor((float)(3*length+4)/4)-1;
+		upper = length/2;
+		lower = length/2 - 1 + length%2;
 		return true;
 	}
 	static unsigned progress, rising, falling, pivot;
 	static imDataType swap;								//for SWAP macro
 	static unsigned q1min, q1max, q3min, q3max;
 
-	progress = 2;							//is deduced by one, when one of two middle elements is found
+	progress = 2 - length%2;				//is deduced by one, when one of two middle elements is found
 	q1min = first = 0;						//set full range
 	q3max = last = length-1;
-	q1max = q3min = length/2;
+	q1max = lower-1;
+	q3min = upper+1;
 
 	while(1){
 		if(!progress) break;
 		if(last-first < EFFICIENT_MAX){	//only swap if needed
 			//cout << "end\n";
-			if(last-(length/2) < (length/2 - 1 - first))
-				InsertSortMax(base,first,last,last-(length/2)+2);	
+			if(last-upper < lower-first)
+				InsertSortMax(base,first,last,last-lower+ (last-lower <= last-first));	
 			else
-				InsertSortMin(base,first,last,(length/2)-first+1);	
+				InsertSortMin(base,first,last,upper-first+ (upper-first <= last-first));
 			break;
 		}
 		//set pivot as median of first, first+1, last: prevents search to run out of array with no
@@ -238,13 +232,13 @@ bool Filter<imDataType>::UniBESFind(imDataType *base, unsigned initBaseLength){
 		}
 		//find where falling ended and continue with branch containing median
 		//falling always contain element, which has been sorted to the right place
-		if(falling > (length/2)){			//most trivial cases
+		if(falling > upper){			//most trivial cases
 			last = falling-1;	
-		}else if(falling < (length/2 -1)){	
+		}else if(falling < lower){	
 			first = falling+1;
 		}else{ 
 			progress--;
-			if(falling == length/2-1){
+			if(falling == lower){
 				first = falling+1;
 			}else{
 				last = falling-1;
